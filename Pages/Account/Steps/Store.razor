@@ -1,0 +1,154 @@
+@inject IJSRuntime JsRuntime
+
+<div class="text-center mb-11">
+    <h1 class="text-gray-900 fw-bolder mb-3">
+        Cadastre sua loja
+    </h1>
+    <div class="text-gray-500 fw-semibold fs-6">
+        Preencha com os dados do seu negócio
+    </div>
+</div>
+<div class="fv-row mb-6 fv-plugins-icon-container">
+    <label class="form-label required">Nome da loja</label>
+    <input type="text" maxlength="45" autocomplete="off" class="form-control" @bind="@(Model.Name)">
+    @if (_fieldError == "storeName")
+    {
+        <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+    }
+</div>
+
+<div class="fv-row mb-6 fv-plugins-icon-container">
+    <label class="form-label required">Telefone ou celular da loja</label>
+    <input type="text" autocomplete="off" placeholder="(00) 00000-0000" class="form-control phone" @bind="@(Model.Phone)">
+    @if (_fieldError == "phone")
+    {
+        <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+    }
+</div>
+
+<div class="mb-8 fv-row fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
+    <label class="d-flex align-items-center form-label mb-5 required">
+        Segmento
+    </label>
+    <div class="mb-0">
+        <label class="d-flex flex-stack mb-5 cursor-pointer">
+            <span class="d-flex align-items-center me-2">
+                <span class="symbol symbol-50px me-6">
+                    <span class="symbol-label">
+                        <i class="ki-outline ki-bank fs-1 text-gray-600"></i>
+                    </span>
+                </span>
+                <span class="d-flex flex-column">
+                    <span class="fw-bold text-gray-800 text-hover-primary fs-5">Restaurante</span>
+                    <span class="fs-6 fw-semibold text-muted">Bebidas, Confeitaria, Lanchonete, Foodtruck, Conveniência...</span>
+                </span>
+            </span>
+            <span class="form-check form-check-custom form-check-solid">
+                <input class="form-check-input" type="radio" name="account_plan" value="restaurant" checked='@(Model.Category == "restaurant")' @onchange="(e) => { Model.Category = e.Value?.ToString(); }">
+            </span>
+        </label>
+        <label class="d-flex flex-stack mb-5 cursor-pointer">
+            <span class="d-flex align-items-center me-2">
+                <span class="symbol symbol-50px me-6">
+                    <span class="symbol-label">
+                        <i class="ki-outline ki-chart fs-1 text-gray-600"></i>
+                    </span>
+                </span>
+                <span class="d-flex flex-column">
+                    <span class="fw-bold text-gray-800 text-hover-primary fs-5">Mercado</span>
+                    <span class="fs-6 fw-semibold text-muted">Pet Shop, Farmácia, Empório, Hortifruti, Açougue...</span>
+                </span>
+            </span>
+            <span class="form-check form-check-custom form-check-solid">
+                <input class="form-check-input" type="radio" name="account_plan" value="market" checked='@(Model.Category == "market")' @onchange="(e) => { Model.Category = e.Value?.ToString(); }">
+            </span>
+        </label>
+    </div>
+    <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+</div>
+
+<div class="d-flex flex-stack pt-5 mb-8">
+    <div class="mr-2">
+         <button type="button" class="btn btn-light-success me-3" @onclick="async () => await OnBack.InvokeAsync(true)">
+            <i class="ki-outline ki-arrow-left fs-4 me-1"></i> Voltar
+        </button>
+    </div>
+    <div>
+        @if (_loading)
+        {
+            <_LoadingButton Class="btn-success"/>
+        }
+        else
+        {
+            <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">
+                Continuar
+                <i class="ki-outline ki-arrow-right fs-4 ms-1"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public required StoreModel Model { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnContinue { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnBack { get; set; }
+
+    private bool _loading;
+    private string? _msgError;
+    private string? _fieldError;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("InputMask.Phone");
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        _msgError = null;
+        _fieldError = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        try
+        {
+            Validate();
+        }
+        catch (Exception e)
+        {
+            _msgError = e.Message;
+            _fieldError = e.InnerException?.Message;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", _msgError);
+            return;
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        await OnContinue.InvokeAsync(true);
+    }
+
+    void Validate()
+    {
+        if (string.IsNullOrEmpty(Model.Name))
+            throw new InvalidOperationException("Preencha o nome da loja.", new Exception("storeName"));
+
+        if (Model.Name.Length is < 4 or > 45)
+            throw new InvalidOperationException("O nome da loja deve ter entre 4 e 45 caracteres.", new Exception("storeName"));
+
+        if (string.IsNullOrEmpty(Model.Phone))
+            throw new InvalidOperationException("Número de telefone inválido.", new Exception("phone"));
+
+        if (Model.Phone.Trim().Length < 14 || Model.Phone.Trim().Length > 20)
+            throw new InvalidOperationException("Número de telefone inválido.", new Exception("phone"));
+    }
+}

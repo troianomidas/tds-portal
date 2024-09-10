@@ -1,0 +1,12 @@
+﻿<button type="button" class="btn @(Class)">
+    @(Text) <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+</button>
+
+@code
+{
+    [Parameter]
+    public string? Class { get; set; } = "btn-primary";
+    
+    [Parameter]
+    public string? Text { get; set; } = "Carregando";
+}

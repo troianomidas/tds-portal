@@ -1,0 +1,84 @@
+﻿@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+
+<div class="modal fade" id="order_success_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    <img alt="Logo" class="mb-5 m-auto" src="/assets/media/icon-positive-vote-3.svg" width="150">
+                    <h1 class="mb-3">Pedido #123 criado com sucesso!</h1>
+                    <div class="text-muted fw-semibold fs-5">Siga as dicas abaixo para garantir um gerenciamento eficiente do pedido.</div>
+                </div>
+                <tr style="display: flex; justify-content: center; margin:0 60px 35px 60px">
+                    <td align="start" valign="start" style="padding-bottom: 10px;">
+                        <div style="background: #F9F9F9; border-radius: 12px; padding:35px 30px">
+                            <div style="display:flex">
+                                <div style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px; ">
+                                    <span style="position: absolute; ; color:#50CD89; font-size: 16px; font-weight: 600;">1</span>
+                                </div>
+                                <div>
+                                    <div>
+                                        <a href="#" style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Manter os clientes informados sobre o progresso de seus pedidos melhora a experiência do cliente</a>
+                                        <p style="color:#009ef7; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">https://quantso.com.br/estevessolutionsit/12345789</p>
+                                    </div>
+                                    <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
+                                </div>
+                            </div>
+                            <div style="display:flex">
+                                <div style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px; ">
+                                    <span style="position: absolute; ; color:#50CD89; font-size: 16px; font-weight: 600;">2</span>
+                                </div>
+                                <div>
+                                    <div>
+                                        <a href="#" style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Imprimir o Cupom Não Fiscal</a>
+                                        <p style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">O cupom é uma ferramenta valiosa para registrar internamente as transações e aprimorar a eficiência na preparação dos pedidos em sua loja.</p>
+                                        <p style="cursor: pointer; color:#009ef7; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">Imprimir</p>
+                                    </div>
+                                    <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
+                                </div>
+                            </div>
+                            <div style="display:flex">
+                                <div style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px; ">
+                                    <span style="position: absolute; ; color:#50CD89; font-size: 16px; font-weight: 600;">3</span>
+                                </div>
+                                <div>
+                                    <div>
+                                        <a href="#" style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Mantenha o pedido atualizado durante cada etapa</a>
+                                        <p style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">Seja na preparação, entrega, ou conclusão, pois isso desempenha um papel essencial na organização eficiente de sua loja.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3" @onclick="async () => await GoToOrdersAsync()">Ir para página de pedidos</button>
+                    <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Criar novo pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public EventCallback<bool> OnCreateNew { get; set; }
+
+    async Task SaveAsync()
+    {
+        await OnCreateNew.InvokeAsync(true);
+        await CloseAsync();
+    }
+
+    async Task GoToOrdersAsync()
+    {
+        await CloseAsync();
+        NavigationManager.NavigateTo("/orders", true);
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_success_modal");
+}

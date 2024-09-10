@@ -1,0 +1,1828 @@
+﻿@page "/opening-hour"
+
+@attribute [Authorize]
+
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="d-flex flex-column flex-column-fluid">
+<div id="kt_app_toolbar" class="app-toolbar mt-8">
+    <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+        <div class="page-title d-flex flex-column justify-content-center me-3 ">
+            <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                Horários
+            </h1>
+            <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1">
+                <li class="breadcrumb-item text-muted">
+                    <a class="text-muted text-hover-success">
+                        Escolha os dias e horários que sua loja receberá pedidos
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+<div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+<div id="kt_app_content_container" class="app-container container-xxl">
+<div class="card mb-10">
+<div class="card-header card-header-stretch pb-0">
+    <div class="card-title">
+        <h3 class="m-0">Horário de funcionamento</h3>
+    </div>
+</div>
+<div class="card-body pb-0">
+<ul class="nav nav-pills nav-availability d-flex flex-nowrap hover-scroll-x py-0 text-success" role="tablist">
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Monday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success active" data-bs-toggle="tab" href="#kt_opening_day_mon" aria-selected="false" tabindex="-1" role="tab">
+            <span class="fs-6 fw-semibold">Segunda</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Tuesday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_tue" aria-selected="false" role="tab" tabindex="-1">
+            <span class="fs-6 fw-semibold">Terça</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Wednesday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_wed" aria-selected="true" role="tab">
+            <span class="fs-6 fw-semibold">Quarta</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Thursday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_thu" aria-selected="false" role="tab" tabindex="-1">
+            <span class="fs-6 fw-semibold">Quinta</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Friday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_fri" aria-selected="false" tabindex="-1" role="tab">
+            <span class="fs-6 fw-semibold">Sexta</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Saturday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_sat" aria-selected="false" tabindex="-1" role="tab">
+            <span class="fs-6 fw-semibold">Sábado</span>
+        </a>
+    </li>
+    <li class="nav-item me-1" role="presentation">
+        <a title="@(DayOfWeek.Sunday.ToString())" class="nav-link btn d-flex flex-column flex-center rounded-pill min-w-45px me-2 py-4 px-3 btn-active-success" data-bs-toggle="tab" href="#kt_opening_day_sun" aria-selected="false" tabindex="-1" role="tab">
+            <span class="fs-6 fw-semibold">Domingo</span>
+        </a>
+    </li>
+</ul>
+@if (_openingHourModel != null)
+{
+    <div class="tab-content mb-5">
+    <div id="kt_opening_day_mon" class="mt-5 tab-pane fade active show" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Monday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_tue" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Tuesday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_wed" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Wednesday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_thu" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Thursday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_fri" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Friday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_sat" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Saturday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    <div id="kt_opening_day_sun" class="mt-5 tab-pane fade" role="tabpanel">
+    @foreach (OpeningHourModel item in _openingHourModel.Where(x => x.DayOfWeek == DayOfWeek.Sunday.ToString()))
+    {
+        <div class="row mb-5">
+        <label class="col-2 col-form-label fw-semibold fs-4 mt-3">@(item.Sort)º turno</label>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.BeginAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Das</label>
+        </div>
+        <div class="col-4 form-floating mt-2">
+            <select class="form-select" @bind="@(item.EndAt)">
+                <option value="00:00">00h00</option>
+                <option value="00:15">00h15</option>
+                <option value="00:30">00h30</option>
+                <option value="00:45">00h45</option>
+                <option value="01:00">01h00</option>
+                <option value="01:15">01h15</option>
+                <option value="01:30">01h30</option>
+                <option value="01:45">01h45</option>
+                <option value="02:00">02h00</option>
+                <option value="02:15">02h15</option>
+                <option value="02:30">02h30</option>
+                <option value="02:45">02h45</option>
+                <option value="03:00">03h00</option>
+                <option value="03:15">03h15</option>
+                <option value="03:30">03h30</option>
+                <option value="03:45">03h45</option>
+                <option value="04:00">04h00</option>
+                <option value="04:15">04h15</option>
+                <option value="04:30">04h30</option>
+                <option value="04:45">04h45</option>
+                <option value="05:00">05h00</option>
+                <option value="05:15">05h15</option>
+                <option value="05:30">05h30</option>
+                <option value="05:45">05h45</option>
+                <option value="06:00">06h00</option>
+                <option value="06:15">06h15</option>
+                <option value="06:30">06h30</option>
+                <option value="06:45">06h45</option>
+                <option value="07:00">07h00</option>
+                <option value="07:15">07h15</option>
+                <option value="07:30">07h30</option>
+                <option value="07:45">07h45</option>
+                <option value="08:00">08h00</option>
+                <option value="08:15">08h15</option>
+                <option value="08:30">08h30</option>
+                <option value="08:45">08h45</option>
+                <option value="09:00">09h00</option>
+                <option value="09:15">09h15</option>
+                <option value="09:30">09h30</option>
+                <option value="09:45">09h45</option>
+                <option value="10:00">10h00</option>
+                <option value="10:15">10h15</option>
+                <option value="10:30">10h30</option>
+                <option value="10:45">10h45</option>
+                <option value="11:00">11h00</option>
+                <option value="11:15">11h15</option>
+                <option value="11:30">11h30</option>
+                <option value="11:45">11h45</option>
+                <option value="12:00">12h00</option>
+                <option value="12:15">12h15</option>
+                <option value="12:30">12h30</option>
+                <option value="12:45">12h45</option>
+                <option value="13:00">13h00</option>
+                <option value="13:15">13h15</option>
+                <option value="13:30">13h30</option>
+                <option value="13:45">13h45</option>
+                <option value="14:00">14h00</option>
+                <option value="14:15">14h15</option>
+                <option value="14:30">14h30</option>
+                <option value="14:45">14h45</option>
+                <option value="15:00">15h00</option>
+                <option value="15:15">15h15</option>
+                <option value="15:30">15h30</option>
+                <option value="15:45">15h45</option>
+                <option value="16:00">16h00</option>
+                <option value="16:15">16h15</option>
+                <option value="16:30">16h30</option>
+                <option value="16:45">16h45</option>
+                <option value="17:00">17h00</option>
+                <option value="17:15">17h15</option>
+                <option value="17:30">17h30</option>
+                <option value="17:45">17h45</option>
+                <option value="18:00">18h00</option>
+                <option value="18:15">18h15</option>
+                <option value="18:30">18h30</option>
+                <option value="18:45">18h45</option>
+                <option value="19:00">19h00</option>
+                <option value="19:15">19h15</option>
+                <option value="19:30">19h30</option>
+                <option value="19:45">19h45</option>
+                <option value="20:00">20h00</option>
+                <option value="20:15">20h15</option>
+                <option value="20:30">20h30</option>
+                <option value="20:45">20h45</option>
+                <option value="21:00">21h00</option>
+                <option value="21:15">21h15</option>
+                <option value="21:30">21h30</option>
+                <option value="21:45">21h45</option>
+                <option value="22:00">22h00</option>
+                <option value="22:15">22h15</option>
+                <option value="22:30">22h30</option>
+                <option value="22:45">22h45</option>
+                <option value="23:00">23h00</option>
+                <option value="23:15">23h15</option>
+                <option value="23:30">23h30</option>
+                <option value="23:45">23h45</option>
+                <option value="23:59">23h59</option>
+            </select>
+            <label>Até</label>
+        </div>
+        <div class="col-2 text-end mt-4">
+            <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+            </button>
+        </div>
+        </div>
+        <div class="separator separator-dashed my-2"></div>
+    }
+    </div>
+    </div>
+}
+else
+{
+    <p class="mt-5">Carregando...</p>
+}
+<div class="notice d-flex bg-light-success rounded border-success border border-dashed mt-5 mb-5 p-6">
+    <div class="d-flex flex-stack flex-grow-1" @onclick="async () => await NewOpeningHourAsync()">
+        <span class="fw-bold fs-6 cursor-pointer text-success text-decoration-underline">Adicionar turno</span>
+    </div>
+</div>
+</div>
+</div>
+<div class="card mb-5">
+    <div class="card-header card-header-stretch pb-0">
+        <div class="card-title">
+            <h3 class="m-0">Pausa programada</h3>
+        </div>
+    </div>
+    <div id="kt_billing_payment_tab_content" class="card-body tab-content">
+        <div id="kt_billing_creditcard" class="tab-pane fade show active" role="tabpanel" aria-labelledby="kt_billing_creditcard_tab">
+            <div class="row gx-9 gy-6">
+                @if (_scheduledBreakModel != null)
+                {
+                    foreach (ScheduledBreakModel scheduledBreak in _scheduledBreakModel)
+                    {
+                        <div class="col-4">
+                            <div class="card card-dashed p-6">
+                                <div class="d-flex flex-column py-2">
+                                    <div class="d-flex fs-4 fw-bold mb-5">
+                                        @(scheduledBreak.Title)
+                                    </div>
+                                    <div class="row col-12">
+                                        <div class="col-6">
+                                            <div class="fs-4 fw-bold">Começa em:</div>
+                                            <div class="fs-6 fw-semibold text-gray-500">@(scheduledBreak.StartAt.ToShortDateString())</div>
+                                            <div class="fs-6 fw-semibold text-gray-500">às @(scheduledBreak.StartAt.ToShortTimeString())</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="fs-4 fw-bold">Termina em:</div>
+                                            <div class="fs-6 fw-semibold text-gray-500">@(scheduledBreak.EndAt.ToShortDateString())</div>
+                                            <div class="fs-6 fw-semibold text-gray-500">às @(scheduledBreak.EndAt.ToShortTimeString())</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mt-2 py-2">
+                                    <button class="btn btn-sm btn-light-danger w-100">
+                                        <span class="indicator-label">
+                                            Excluir
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>Carregando...</p>
+                }
+                <div class="col-12">
+                    <div class="notice d-flex bg-light-success rounded border-success border border-dashed h-lg-100 p-6">
+                        <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                            <div class="mb-3 mb-md-0">
+                                <h4 class="text-gray-900 fw-bold">Criar pausa programada</h4>
+                                <span>A loja estará indisponível nesta data, mesmo durante o horário de funcionamento. <span @onclick="async () => await OpenScheduleBreakAsync()" class="text-success fw-bold cursor-pointer">Adicionar novo</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-end gap-2 pt-2 pb-6">
+    @if (_loading)
+    {
+        <_LoadingButton Class="btn-sm btn-success" Text="Salvando..."/>
+    }
+    else
+    {
+        <button type="button" class="btn btn-sm btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+    }
+</div>
+
+</div>
+</div>
+
+</div>
+
+<ScheduledBreakModal OnSaved="NewScheduledBreak"/>
+
+@code
+{
+    private List<OpeningHourModel>? _openingHourModel;
+    private List<ScheduledBreakModel>? _scheduledBreakModel;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadOpeningHourAsync();
+            await LoadScheduledBreakAsync();
+        }
+    }
+
+    async Task LoadOpeningHourAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/OpeningHour");
+        if (response.IsSuccessRequest)
+        {
+            _openingHourModel = JsonConvert.DeserializeObject<List<OpeningHourModel>>(response.Json ?? string.Empty);
+            StateHasChanged();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+    }
+
+    async Task LoadScheduledBreakAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/ScheduledBreak");
+        if (response.IsSuccessRequest)
+        {
+            _scheduledBreakModel = JsonConvert.DeserializeObject<List<ScheduledBreakModel>>(response.Json ?? string.Empty);
+            StateHasChanged();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/OpeningHour", new
+        {
+            Items = _openingHourModel
+        });
+        _loading = false;
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        ApiResponse response2 = await DataRequest.SendAsync(HttpMethod.Post, "/ScheduledBreak", new
+        {
+            Items = _scheduledBreakModel
+        });
+        _loading = false;
+        if (!response2.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response2.Error);
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "horários alterados com sucesso.");
+        NavigationManager.NavigateTo("/opening-hour");
+    }
+
+    async Task NewOpeningHourAsync()
+    {
+        if (_openingHourModel == null)
+            return;
+
+        var dayOfWeek = await JsRuntime.InvokeAsync<string>("ElementInvoke.Text", ".nav-availability .nav-item a.active");
+
+        if (_openingHourModel.Count(x => x.DayOfWeek == dayOfWeek) > 1)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", "Você só pode adicionar dois intervalos de horários por dia.");
+            return;
+        }
+
+        _openingHourModel.Add(new OpeningHourModel
+        {
+            DayOfWeek = dayOfWeek,
+            Sort = _openingHourModel.Count(x => x.DayOfWeek == dayOfWeek) + 1,
+            BeginAt = "17:00",
+            EndAt = "22:00"
+        });
+        StateHasChanged();
+    }
+
+    async Task OpenScheduleBreakAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "scheduled_break_modal");
+        StateHasChanged();
+    }
+
+    void NewScheduledBreak(ScheduledBreakModel? scheduledBreak)
+    {
+        if (_scheduledBreakModel == null || scheduledBreak == null)
+            return;
+
+        _scheduledBreakModel.Add(scheduledBreak);
+
+        StateHasChanged();
+    }
+
+    void Remove(Guid internalId)
+    {
+        if (_openingHourModel == null)
+            return;
+
+        OpeningHourModel? openingHourItem = _openingHourModel.FirstOrDefault(x => x.InternalId == internalId);
+        if (openingHourItem == null)
+            return;
+
+        _openingHourModel = _openingHourModel.FindAll(x => x.InternalId != openingHourItem.InternalId);
+
+        var sort = 1;
+
+        foreach (OpeningHourModel item in  _openingHourModel.Where(x => x.DayOfWeek == openingHourItem.DayOfWeek).OrderBy(x => x.Sort))
+        {
+            item.Sort = sort;
+            sort++;
+        }
+
+        StateHasChanged();
+    }
+}

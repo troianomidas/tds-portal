@@ -1,0 +1,112 @@
+﻿@* @page "/store/printer" *@
+@* *@
+@* @attribute [Authorize(Policy = Policies.SubscriptionActive)] *@
+@* *@
+@* @inject IJSRuntime JsRuntime *@
+@* @inject IHttpClientFactory HttpClientFactory *@
+@* @inject IMemoryCache MemoryCache *@
+@* @inject NavigationManager NavigationManager *@
+@* @inject DataRequest DataRequest *@
+@* @inject AuthenticationStateProvider AuthenticationStateProvider *@
+@* *@
+@* <div class="d-flex flex-column flex-column-fluid"> *@
+@*     <div id="kt_app_toolbar" class="app-toolbar mt-8"> *@
+@*         <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack"> *@
+@*             <div class="page-title d-flex flex-column justify-content-center me-3 "> *@
+@*                 <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0"> *@
+@*                     Impressora *@
+@*                 </h1> *@
+@*                 <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1"> *@
+@*                     <li class="breadcrumb-item text-muted"> *@
+@*                         <a class="text-muted text-hover-success"> *@
+@*                             Automatizar a impressão de cupons não fiscais após o recebimento de um pedido *@
+@*                         </a> *@
+@*                     </li> *@
+@*                 </ul> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* *@
+@*     <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5"> *@
+@*         <div id="kt_app_content_container" class="app-container container-xxl"> *@
+@*             <div class="card  mb-5 mb-xl-10"> *@
+@*                 <!--begin::Card header--> *@
+@*                 <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_signin_method"> *@
+@*                     <div class="card-title m-0"> *@
+@*                         <h3 class="fw-bold m-0">Configuração</h3> *@
+@*                     </div> *@
+@*                 </div> *@
+@*                 <!--end::Card header--> *@
+@* *@
+@*                 <!--begin::Content--> *@
+@*                 <div id="kt_account_settings_signin_method" class="collapse show"> *@
+@*                     <!--begin::Card body--> *@
+@*                     <div class="card-body border-top p-9"> *@
+@*                         <div class="d-flex flex-wrap align-items-center"> *@
+@*                             <div id="kt_signin_email"> *@
+@*                                 <div class="fs-6 fw-bold mb-1">External ID</div> *@
+@*                                 <div class="fw-semibold text-gray-600">@(_settings?.ExternalId ?? "-")</div> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                         <div class="separator separator-dashed my-6"></div> *@
+@*                         <div class="d-flex flex-wrap align-items-center mb-10"> *@
+@*                             <div id="kt_signin_password"> *@
+@*                                 <div class="fs-6 fw-bold mb-1">Situação</div> *@
+@*                                 @if (_settings == null) *@
+@*                                 { *@
+@*                                     <div class="fw-semibold">Carregando...</div>    *@
+@*                                 } *@
+@*                                 else *@
+@*                                 { *@
+@*                                     if (_settings.IsPrinterConnected) *@
+@*                                     { *@
+@*                                         <div class="fw-semibold text-success">Conectada</div>    *@
+@*                                     } *@
+@*                                     else *@
+@*                                     { *@
+@*                                         <div class="fw-semibold text-danger">Desconectada</div>     *@
+@*                                     } *@
+@*                                 } *@
+@*                             </div> *@
+@*                         </div> *@
+@* *@
+@*                         <div class="notice d-flex bg-light-success rounded border-success border border-dashed  p-6"> *@
+@*                             <i class="ki-outline ki-printer fs-2tx text-success me-4"></i> *@
+@*                             <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap"> *@
+@*                                 <div class="mb-3 mb-md-0 fw-semibold"> *@
+@*                                     <h4 class="text-gray-900 fw-bold mb-0">Quantso Printer.exe</h4> *@
+@*                                     <div class="fs-6 text-gray-700 pe-7">12MB</div> *@
+@*                                 </div> *@
+@*                                 <a href="#" class="btn btn-success px-6 align-self-center text-nowrap" data-bs-toggle="modal" data-bs-target="#kt_modal_two_factor_authentication"> *@
+@*                                     Fazer o Download *@
+@*                                 </a> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* @code *@
+@* { *@
+@*     private StoreSettingsModel? _settings; *@
+@* *@
+@*     protected override async Task OnAfterRenderAsync(bool firstRender) *@
+@*     { *@
+@*         if (firstRender) *@
+@*             await LoadSettingsAsync(); *@
+@*     } *@
+@* *@
+@*     async Task LoadSettingsAsync() *@
+@*     { *@
+@*         ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/store/Settings"); *@
+@*         if (response.IsSuccessRequest) *@
+@*             _settings = JsonConvert.DeserializeObject<StoreSettingsModel?>(response.Json ?? string.Empty) ?? new StoreSettingsModel(); *@
+@*         else *@
+@*             await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error); *@
+@* *@
+@*         StateHasChanged(); *@
+@*     } *@
+@* } *@

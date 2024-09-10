@@ -1,0 +1,208 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_basket_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                @if (Product == null)
+                {
+                    <p>Carregando...</p>
+                }
+                else
+                {
+                    <div class="card-body p-0">
+                        <h1 class="fw-bold text-dark">
+                            @(Product.Name)
+                        </h1>
+                        <p class="text-gray-400 fw-semibold fs-5 mt-1 mb-7">
+                            @(Product.Description)
+                        </p>
+                        <div class="d-flex flex-wrap mb-5">
+                            <div class="symbol symbol-60px me-8 mb-0">
+                                <span class="symbol-label" style="background-image:url('@(Product.GetImageUrl())');"></span>
+                            </div>
+                            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-7 mb-3">
+                                <div class="fs-6 text-gray-800 fw-bold">
+                                    @(CurrencyUtils.MoneyFormat(Product.GetUnitPriceWithDiscount()))
+                                    @if (Product.DiscountType > 1)
+                                    {
+                                        <span class="ms-3 text-decoration-line-through fs-7">@(CurrencyUtils.MoneyFormat(Product.UnitPrice))</span>
+                                    }
+                                </div>
+                                <div class="fw-semibold text-gray-400">Preço unitário</div>
+                            </div>
+                            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-7 mb-3">
+                                <div class="fs-6 text-gray-800 fw-bold">@(Product.Sku ?? "-")</div>
+                                <div class="fw-semibold text-gray-400">Código PDV</div>
+                            </div>
+                            @if (Product.Stockable)
+                            {
+                                <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 mb-3">
+                                    <div class="fs-6 text-gray-800 fw-bold">@(Product.AvailableStock)</div>
+                                    <div class="fw-semibold text-gray-400">Estoque</div>
+                                </div>
+                            }
+
+                        </div>
+
+                        <div class="basket-max-height">
+                            @if (_loading)
+                            {
+                                <p>Carregando...</p>
+                            }
+                            else
+                            {
+                                foreach (ProductExtraMatchModel extraMatches in Product.ProductExtraMatches)
+                                {
+                                    <div class="card card-flush">
+                                        <div class="card-header p-0 mb-2" style="border-radius: 0; background-color: #F9F9F9">
+                                            <div class="card-title flex-column ms-3">
+                                                <h3 class="fw-bold mb-1">
+                                                    @(extraMatches.ProductExtra.Name)
+                                                    <span class="badge @(extraMatches.ProductExtra.IsRequired ? "badge-light-danger" : "badge-secondary") ms-2">@(extraMatches.ProductExtra.IsRequired ? "Obrigatório" : "Opcional")</span>
+                                                </h3>
+                                                <div class="fs-6 text-gray-400">@(extraMatches.ProductExtra?.GetAmount()) de @(extraMatches.ProductExtra?.Max)</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body d-flex flex-column mb-0 p-0 pt-0">
+                                            @foreach (ProductExtraItemModel item in extraMatches.ProductExtra.Items)
+                                            {
+                                                <div class="d-flex align-items-center position-relative mb-0">
+                                                    <div class="fw-semibold ms-0">
+                                                        <a class="fs-6 fw-bold text-gray-800 text-hover-primary">@(item.Name)</a>
+                                                        <div class="text-gray-400 fs-7">@(item.Description)</div>
+                                                        <div class="text-gray-800 mt-1">@(CurrencyUtils.MoneyFormat(item.UnitPrice))</div>
+                                                    </div>
+                                                    <div class="ms-auto">
+                                                        <_InputDialer Width="125" Amount="@(item.Amount)" Limit="@(extraMatches.ProductExtra.Max)" LimitUsed="@(extraMatches.ProductExtra.GetAmount())" OnChange="i => {item.Amount = i; CalculateValue();}"/>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="separator my-2"></div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer text-center d-block">
+                <div class="d-inline-block me-5">
+                    <_InputDialer Amount="@(_amount)" Min="@(1)" LimitUsed="@(_amount)" OnChange="i => { _amount = i; CalculateValue();}"/>
+                </div>
+                @if (_loading)
+                {
+                    <_LoadingButton/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Adicionar @(CurrencyUtils.MoneyFormat(_totalValue))</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public ProductModel? Product { get; set; }
+
+    [Parameter]
+    public EventCallback<List<OrderItemModel>> OnSelected { get; set; }
+
+    private int _amount = 1;
+    private decimal _totalValue;
+
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+
+        if (Product is {HasExtra: true,ProductExtraMatches.Count: 0 })
+        {
+            _loading = true;
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, $"/catalog/{Product.Id}");
+            _loading = false;
+            if (!response.IsSuccessRequest)
+                return;
+
+            Product = JsonConvert.DeserializeObject<ProductModel>(response.Json ?? string.Empty);
+            StateHasChanged();
+        }
+        
+        CalculateValue();
+    }
+
+    void CalculateValue()
+    {
+        if (Product == null)
+            return;
+
+        _totalValue = Product.GetUnitPriceWithDiscount() * _amount;
+
+        foreach (ProductExtraMatchModel extra in Product.ProductExtraMatches)
+        {
+            decimal extraValues = extra.ProductExtra?.Items?.Sum(x => x.Amount * x.UnitPrice) ?? 0;
+            _totalValue += extraValues * _amount;
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        if (Product == null)
+            return;
+
+        var parentExternalId = Guid.NewGuid();
+
+        var items = new List<OrderItemModel>
+        {
+            new()
+            {
+                ExternalId = parentExternalId,
+                ProductId = Product.Id,
+                Amount = _amount,
+                Item = Product.Name,
+                Description = Product.Description,
+                UnitValue = Product.GetUnitPriceWithDiscount()
+            }
+        };
+
+        foreach (ProductExtraMatchModel extra in Product.ProductExtraMatches)
+        {
+            if (extra.ProductExtra?.Items == null)
+                continue;
+
+            foreach (ProductExtraItemModel item in extra.ProductExtra.Items.Where(x => x.Amount > 0))
+            {
+                items.Add(new OrderItemModel
+                {
+                    ExternalId = Guid.NewGuid(),
+                    ExternalParentId = parentExternalId,
+                    ProductId = Product.Id,
+                    Amount = item.Amount,
+                    Item = item.Name,
+                    Description = extra.ProductExtra.Name,
+                    UnitValue = item.UnitPrice
+                });
+            }
+        }
+
+        await CloseAsync();
+        await OnSelected.InvokeAsync(items);
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_basket_modal");
+}

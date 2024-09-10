@@ -1,0 +1,117 @@
+﻿@using WebApp.Models.Collaborators
+@inject IJSRuntime JsRuntime
+
+<div class="card card-flush py-4 mb-0">
+    <div class="card-body">
+        <div class="mb-5 row">
+            <div class="col-6">
+                <input type="radio" class="btn-check" name="productType" id="productType_1" checked="@(!Product.IsProductIndustrialized)" @onchange="() => Product.IsProductIndustrialized = false"/>
+                <label class="btn btn-outline btn-outline-dashed btn-active-light-success p-7 d-flex align-items-center mb-5" for="productType_1">
+                    <i class="ki-outline ki-shop fs-2x me-4"></i>
+                    <span class="d-block fw-semibold text-start">
+                        <span class="text-dark fw-bold d-block fs-4">Preparado</span>
+                        <span class="text-muted fw-semibold fs-7">
+                            Itens produzidos pela sua loja, como bolos, lanches e marmitas.
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="col-6">
+                <input type="radio" class="btn-check" name="radio_buttons_2" id="productType_2" checked="@(Product.IsProductIndustrialized)" @onchange="() => Product.IsProductIndustrialized = true"/>
+                <label class="btn btn-outline btn-outline-dashed btn-active-light-success p-7 d-flex align-items-center mb-5" for="productType_2">
+                    <i class="ki-outline ki-barcode fs-2x me-4"></i>
+
+                    <span class="d-block fw-semibold text-start">
+                        <span class="text-dark fw-bold d-block fs-4">Industrializado</span>
+                        <span class="text-muted fw-semibold fs-7">
+                            Itens prontos, como refrigerantes, chicletes e outros.
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="mb-5">
+            <div class="card card-flush py-2">
+                <div class="card-body p-0">
+                    <_InputImage Thumbnail="@(Product.ImageUrl)" OnUploaded="imageUrl => Product.ImageUrl = imageUrl" OnRemove="s => Product.ImageUrl = null"/>
+                    <div class="text-muted fs-7">Somente arquivos de imagem *.png, *.jpg e *.jpeg são aceitos.</div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-8">
+            <label class="required form-label">Nome do item</label>
+            <input type="text" class="form-control form-control-solid mb-2" autocomplete="off" @bind="@(Product.Name)"/>
+            <div class="text-muted fs-7">É recomendado que o nome do item seja único.</div>
+        </div>
+        <div class="mb-8">
+            <label class="form-label">Categoria</label>
+            <select class="form-select form-select-solid mb-2" @bind="@(Product.CategoryId)">
+                @if (Categories != null)
+                {
+                    @foreach (CategoryModel item in Categories)
+                    {
+                        <option value="@(item.Id)">@(item.Name)</option>
+                    }
+                }
+            </select>
+            <div class="text-muted fs-7">É o número de identificação utilizado para integrar o item ao seu sistema de PDV.</div>
+        </div>
+        <div class="mb-8">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-control form-control-solid mb-2" rows="3" autocomplete="off" @bind="@(Product.Description)"></textarea>
+            <div class="text-muted fs-7">Descrição de até 600 caracteres do item para melhor visibilidade.</div>
+        </div>
+        @if (Product.IsProductIndustrialized)
+        {
+            <div class="mb-8">
+                <label class="required form-label">Código de barras (EAN)</label>
+                <input type="text" class="form-control form-control-solid mb-2" autocomplete="off" onclick="this.select();" @bind="@(Product.BarcodeEan)"/>
+            </div>
+        }
+        <div class="mb-8">
+            <label class="form-label">Código PDV</label>
+            <input type="text" class="form-control form-control-solid mb-2" placeholder="000" autocomplete="off" onclick="this.select();" @bind="@(Product.Sku)"/>
+            <div class="text-muted fs-7">É o número de identificação utilizado para integrar o item ao seu sistema de PDV.</div>
+        </div>
+        @if (!Product.IsProductIndustrialized)
+        {
+            <div class="mb-8">
+                <label class="form-label">Esse item serve quantas pessoas?</label>
+                <select class="form-select form-select-solid mb-2" @bind="@(Product.ServesHowManyPeople)">
+                    <option value="0" selected="selected">Nao se aplica</option>
+                    <option value="1">1 pessoa</option>
+                    <option value="2">Até 2 pessoas</option>
+                    <option value="3">Até 3 pessoas</option>
+                    <option value="4">Até 4 pessoas</option>
+                    <option value="5">Até 5 pessoas</option>
+                    <option value="6">Até 6 pessoas</option>
+                </select>
+            </div>
+
+            <div class="mb-0 row">
+                <label class="form-label">Peso</label>
+                <div class="col-3">
+                    <input type="number" class="form-control form-control-solid" min="0" placeholder="0,00" @bind="@(Product.Weight)" onclick="this.select();"/>
+                </div>
+                <div class="col-3">
+                    <select class="form-select form-select-solid mb-2" @bind="@(Product.WeightType)">
+                        <option value="g">g</option>
+                        <option value="kg">kg</option>
+                    </select>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public ProductModel Product { get; set; } = null!;
+
+    [Parameter]
+    public List<CategoryModel>? Categories { get; set; }
+
+    [Parameter]
+    public List<CollaboratorModal>? Collaborators { get; set; }
+}

@@ -1,0 +1,11 @@
+﻿input{
+    border: 1px solid #ddd !important;
+}
+
+select {
+    border: 1px solid #ddd !important;
+}
+
+.btn-check:active+.btn.btn-outline.btn-outline-dashed, .btn-check:checked+.btn.btn-outline.btn-outline-dashed, .btn.btn-outline.btn-outline-dashed.active, .btn.btn-outline.btn-outline-dashed.show, .btn.btn-outline.btn-outline-dashed:active:not(.btn-active), .btn.btn-outline.btn-outline-dashed:focus:not(.btn-active), .btn.btn-outline.btn-outline-dashed:hover:not(.btn-active), .show>.btn.btn-outline.btn-outline-dashed {
+    border-color: var(--bs-success);
+}

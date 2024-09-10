@@ -1,0 +1,196 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="card card-flush py-4">
+    <div class="card-header">
+        <div class="card-title">
+            <h2>Complementos</h2>
+        </div>
+        @if (ProductHasExtras)
+        {
+            <div class="card-toolbar">
+                @if (_loading)
+                {
+                    <_LoadingButton Class="btn-sm btn-light-success me-4"/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-light-success cursor-pointer me-3" @onclick="async () => await OpenImportProductExtraModalAsync()">Importar de outro item</button>
+                }
+                <button type="button" class="btn btn-sm btn-success cursor-pointer" @onclick="async () => await OpenNewProductExtraModalAsync()">Criar novo grupo</button>
+            </div>
+        }
+    </div>
+    <div class="card-body pt-0">
+        <div class="row">
+            <div class="col-6">
+                <label class="btn btn-outline btn-outline-dashed btn-active-light-success d-flex text-start p-4 @(!ProductHasExtras ? "active" : "")">
+                    <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                        <input class="form-check-input" type="radio" name="productHasExtras" checked="@(!ProductHasExtras)" @onchange="async () => await ChangeExtraAsync(false)">
+                    </span>
+                    <span class="ms-5">
+                        <span class="fs-6 fw-bold mb-1 d-block">Não, este item não tem complementos</span>
+                    </span>
+                </label>
+            </div>
+            <div class="col-6">
+                <label class="btn btn-outline btn-outline-dashed btn-active-light-success d-flex text-start p-4 @(ProductHasExtras ? "active" : "")">
+                    <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                        <input class="form-check-input" type="radio" name="productHasExtras" checked="@ProductHasExtras" @onchange="async () => await ChangeExtraAsync(true)">
+                    </span>
+                    <span class="ms-5">
+                        <span class="fs-6 fw-bold mb-1 d-block">Sim, este item tem complementos</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+        @if (ProductHasExtras)
+        {
+            <div class="card card-flush">
+                <div class="card-body pt-5">
+                    <div class="dataTables_wrapper dt-bootstrap4 no-footer">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed fs-6 gy-3 dataTable no-footer">
+                                <thead>
+                                <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-start min-w-100px">Complemento</th>
+                                    <th class="text-center min-w-100px">Obrigatório</th>
+                                    <th class="text-center min-w-100px">Qtde.</th>
+                                    <th class="text-end"></th>
+                                    <th class="text-end"></th>
+                                    <th class="text-end"></th>
+                                </tr>
+                                </thead>
+                                <tbody class="fw-bold text-gray-600">
+                                @foreach (ProductExtraMatchModel extra in ProductExtraMatches)
+                                {
+                                    <tr class="odd">
+                                        <td class="text-start">
+                                            @(extra.ProductExtra.Name)
+                                        </td>
+                                        <td class="text-center">
+                                            @(extra.ProductExtra.IsRequired ? "Sim" : "Nao")
+                                        </td>
+                                        <td class="text-center">
+                                            @(extra.ProductExtra.Min)
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-icon btn-light btn-active-light-success h-25px w-25px" title="Expandir itens deste complemento" @onclick="() => extra.ProductExtra.ShowDetail = !extra.ProductExtra.ShowDetail">
+                                                <i class="ki-outline fs-4 m-0 @(extra.ProductExtra.ShowDetail ? "ki-minus" : "ki-plus")"></i>
+                                            </button>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-icon btn-light btn-active-light-success h-25px w-25px" title="Editar complemento" @onclick="async () => await OpenExtraEditAsync(extra.ProductExtraId)">
+                                                <i class="ki-outline fs-4 m-0 ki-pencil"></i>
+                                            </button>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-icon btn-light btn-active-light-success h-25px w-25px" title="Remover esse complemento do produto" @onclick="() => RemoveProductExtra(extra.ProductExtraId)">
+                                                <i class="ki-outline fs-4 m-0 ki-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    @if (extra.ProductExtra.ShowDetail)
+                                    {
+                                        foreach (ProductExtraItemModel item in extra.ProductExtra.Items)
+                                        {
+                                            <_ProductExtraItemTable ExtraItem="item"/>
+                                        }
+                                    }
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start"></div>
+                            <div class="col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<ImportProductExtrasModal Items="_allProductExtras" OnSave="ImportProductExtraCallback"/>
+<NewProductExtraModal ProductExtraEdit="_productExtraEdit" OnSave="(e) => ImportProductExtraCallback(new List<ProductExtraModel> { e })"/>
+
+@code
+{
+    [Parameter]
+    public List<ProductExtraMatchModel> ProductExtraMatches { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<(bool hasExtras, List<ProductExtraMatchModel> extras)> OnSave { get; set; }
+
+    private List<ProductExtraModel> _allProductExtras = new();
+    private ProductExtraModel? _productExtraEdit;
+
+    [Parameter]
+    public bool ProductHasExtras { get; set; }
+
+    private bool _loading;
+    private bool _showSelectProductExtraModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProductExtraMatches.Count > 0)
+        {
+    //todo: load productExtras into private var
+        }
+    }
+
+    async Task OpenImportProductExtraModalAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/productextra");
+        _loading = false;
+
+        if (!response.IsSuccessRequest)
+            return;
+
+        _allProductExtras = JsonConvert.DeserializeObject<List<ProductExtraModel>>(response.Json ?? string.Empty) ?? new List<ProductExtraModel>();
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "select_product_extra_modal");
+    }
+
+    async Task OpenNewProductExtraModalAsync()
+    {
+        _productExtraEdit = null;
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "new_product_extra_modal");
+    }
+
+    void ImportProductExtraCallback(List<ProductExtraModel> items)
+    {
+        foreach (ProductExtraModel item in items)
+        {
+            ProductExtraMatchModel? extraMatch = ProductExtraMatches.FirstOrDefault(x => x.ProductExtraId == item.Id);
+            if (extraMatch == null)
+                ProductExtraMatches.Add(new ProductExtraMatchModel { ProductExtra = item, ProductExtraId = item.Id });
+            else
+                extraMatch.ProductExtra = item;
+        }
+
+        StateHasChanged();
+    }
+
+    void RemoveProductExtra(int extraId)
+    {
+        ProductExtraMatches = ProductExtraMatches.FindAll(x => x.ProductExtraId != extraId);
+        StateHasChanged();
+    }
+
+    async Task OpenExtraEditAsync(int productExtraId)
+    {
+        _productExtraEdit = ProductExtraMatches.FirstOrDefault(x => x.ProductExtraId == productExtraId)?.ProductExtra;
+        StateHasChanged();
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "new_product_extra_modal");
+    }
+    
+    async Task ChangeExtraAsync(bool productHasExtras)
+    {
+        ProductHasExtras = productHasExtras;
+        await OnSave.InvokeAsync((ProductHasExtras, ProductExtraMatches));
+    }
+}

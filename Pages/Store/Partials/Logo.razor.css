@@ -1,0 +1,23 @@
+﻿.image-input-placeholder {
+    background-image: url('https://delivery3-dzgdgkbdccbefha5.z03.azurefd.net/images/blank.png');
+}
+
+.thumbnail-remove{
+    left: 100%;
+    cursor: pointer;
+    position: absolute;
+    transform: translate(-50%,-50%);
+}
+
+.image-input-wrapper{
+    background-position: center !important; 
+    background-size: cover !important;"    
+}
+
+.image-input .image-input-wrapper {
+    border-radius: 50% !important;
+}
+
+.image-input {
+    border-radius: 50% !important;
+}

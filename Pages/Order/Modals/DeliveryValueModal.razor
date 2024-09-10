@@ -1,0 +1,71 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_delivery_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    <h1 class="mb-3">Valor da entrega</h1>
+                    <div class="text-muted fw-semibold fs-5">Valor para custear a entrega do pedido no local escolhido pelo cliente.</div>
+                </div>
+
+                <div class="row col-12 mb-8">
+                    <label class="form-label required">Valor da entrega</label>
+                    <div class="d-flex align-items-center position-relative">
+                        <span class="fs-6 fw-semibold position-absolute ms-4 text-gray-700">R$</span>
+                        <input type="text" class="form-control form-control-solid w-100 ps-12 money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(_deliveryValue)" @onkeyup="async (e) => await EnterKeyPressAsync(e.Key)">
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3">
+                        Fechar
+                    </button>
+                    <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public EventCallback<decimal> OnSaved { get; set; }
+
+    private decimal _deliveryValue;
+
+    private string? _errorMsg;
+    private string? _errorField;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JsRuntime.InvokeVoidAsync("OnModalShow.Select", "order_delivery_modal", "deliveryValue");
+    }
+
+    async Task SaveAsync()
+    {
+        _errorMsg = null;
+        _errorField = null;
+
+        await OnSaved.InvokeAsync(_deliveryValue);
+        await CloseAsync();
+    }
+
+    async Task EnterKeyPressAsync(string keyPress)
+    {
+        if (keyPress != "Enter")
+            return;
+
+        await SaveAsync();
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_delivery_modal");
+}

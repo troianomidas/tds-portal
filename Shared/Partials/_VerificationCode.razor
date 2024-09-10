@@ -1,0 +1,175 @@
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="text-center mb-11">
+    <h1 class="text-gray-900 mb-3">
+        Confirme seu e-mail
+    </h1>
+    <div class="text-muted fw-semibold fs-5">Digite o código de acesso enviado para o e-mail:</div>
+    <div class="fw-bold text-gray-900 fs-3 mt-8">@(ToEmail)</div>
+</div>
+<div class="mb-5">
+    @if (_loading)
+    {
+        <input type="text" readonly="readonly" disabled="disabled" style="letter-spacing: 25px;" class="form-control bg-transparent fs-2qx text-center mx-1 my-2" value="@(_verificationCode)">
+    }
+    else
+    {
+        <input type="text" placeholder="000000" autocomplete="off" maxlength="6" style="letter-spacing: 25px;" value="@(_verificationCode)" class="form-control bg-transparent fs-2qx text-center mx-1 my-2" @oninput="async (e) => await SetVerificationCodeAsync(e)">
+    }
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback">@(_error)</div>
+    }
+</div>
+
+<div class="text-center fw-semibold fs-5 mb-15">
+    <span class="text-muted me-1">Não recebeu o código ?</span>
+    <a class="link-primary cursor-pointer fs-5 me-1" @onclick="async () => await SendAsync()">Reenviar</a>
+</div>
+
+<div class="d-flex flex-stack pt-0 mb-15">
+    <div class="mr-2">
+        <button type="button" class="btn btn-light-success me-3" @onclick="async () => await OnBack.InvokeAsync(true)">
+            <i class="ki-outline ki-arrow-left fs-4 me-1"></i> Voltar
+        </button>
+    </div>
+
+    <div>
+        @if (_loading)
+        {
+            <_LoadingButton Class="btn-success"/>
+        }
+        else
+        {
+            <button type="button" class="btn btn-success">
+                Continuar
+                <i class="ki-outline ki-arrow-right fs-4 ms-1"></i>
+            </button>
+        }
+    </div>
+</div>
+
+<div class="mb-0">
+    <h4 class="text-gray-800 w-bolder mb-4">
+        Perguntas Frequentes
+    </h4>
+    <div class="m-0">
+        <div class="d-flex align-items-center py-3 toggle mb-0 collapsed" data-bs-target="#kt_faq_1_1" @onclick="() => _collapsed = !_collapsed">
+            <div class="btn btn-sm btn-icon mw-20px btn-active-color-success me-5">
+                @if (_collapsed)
+                {
+                    <i class="ki-outline ki-minus-square toggle-off text-success fs-1"></i>
+                }
+                else
+                {
+                    <i class="ki-outline ki-plus-square toggle-off text-success fs-1"></i>
+                }
+            </div>
+            <h4 class="text-gray-700 fw-bold cursor-pointer mb-0 fs-6">
+                Não recebi o código de validação por e-mail, e agora?
+            </h4>
+        </div>
+        <div id="kt_faq_1_1" class="fs-6 ms-1 collapse @(_collapsed ? "show" : "")">
+            <div class="mb-4 text-gray-600 fw-semibold fs-7 ps-10">
+                Caso você não encontre o e-mail na sua caixa de entrada. Verifique sua caixa de spam, alguns serviços de e-mail possuem filtros que não permitem que nossos e-mails cheguem na pasta principal. Se mesmo assim não encontrar o e-mail com o código de validação, verifique se você digitou o e-mail corretamente, basta voltar para a etapa anterior e corrigir os dados digitados.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code{
+
+    [Parameter]
+    public string? ToEmail { get; set; }
+
+    [Parameter]
+    public string? ToName { get; set; }
+    
+    [Parameter]
+    public string? PublicIp { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnConfirmed { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnBack { get; set; }
+
+    private string? _verificationCode;
+
+    private bool _loading;
+    private string? _error;
+    private bool _collapsed;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await SendAsync();
+    }
+
+    async Task SendAsync()
+    {
+        _error = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/VerificationCode/Send", new
+        {
+            Email = ToEmail,
+            Name = ToName,
+            PublicIp,
+        });
+        
+        _loading = false;
+
+        if (!response.IsSuccessRequest)
+        {
+            _error = response.Error;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+    }
+
+    async Task VerifyAsync()
+    {
+        _error = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/VerificationCode/Check", new
+        {
+            Code = _verificationCode,
+            Email = ToEmail
+        });
+
+        _loading = false;
+        
+        StateHasChanged();
+        
+        if (!response.IsSuccessRequest)
+        {
+            _loading = false;
+            _error = response.Error;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        await OnConfirmed.InvokeAsync(true);
+    }
+
+    async Task BackAsync()
+    {
+        await OnBack.InvokeAsync(true);
+    }
+
+    async Task SetVerificationCodeAsync(ChangeEventArgs e)
+    {
+        if (e.Value?.ToString()?.Length < 6)
+            return;
+
+        _verificationCode = e.Value?.ToString()?.Trim();
+
+        await VerifyAsync();
+    }
+
+}

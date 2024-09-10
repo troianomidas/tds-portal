@@ -1,0 +1,36 @@
+﻿@page "/subscription/expired"
+@using WebApp.Constants
+
+@attribute [Authorize]
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+        <div id="kt_app_content_container" class="app-container container-xxl">
+            <div class="card card-flush w-650px py-5 d-block text-center">
+                <div class="card-body py-15 text-center">
+                    <div class="text-center mb-10">
+                        <img alt="Logo" src="@(StorageConst.FrontDoor)/portal/assets/media/auth/account-deactivated.png" class="h-250px">
+                    </div>
+                    <h1>
+                        Renove sua assinatura
+                    </h1>
+                    <div class="fw-semibold fs-4 text-gray-500 mt-5 mb-10">
+                        Para continuar desfrutando dos benefícios e serviços que oferecemos, é necessário <b>renovar a sua assinatura</b> o mais rápido possível.
+                        <br>
+                        <ul class="fs-6 fw-semibold text-gray-500 mt-10 mb-0 text-start">
+                            <li>
+                                <span>Acesse a página da sua assinatura e clique em "Comprar Assinatura"</span>
+                            </li>
+                            <li class="my-4">
+                                <span>Você será redirecionado ao site seguro da Efí para concluir o processo de pagamento</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mb-0">
+                        <a href="/subscription" class="btn btn-sm btn-success">Ir para assinatura</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

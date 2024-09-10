@@ -1,0 +1,278 @@
+﻿@page "/store"
+
+@attribute [Authorize]
+
+@inject IJSRuntime JsRuntime
+@inject IHttpClientFactory HttpClientFactory
+@inject IMemoryCache MemoryCache
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_toolbar" class="app-toolbar mt-8">
+        <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <div class="page-title d-flex flex-column justify-content-center me-3 ">
+                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                    Minha loja
+                </h1>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1">
+                    <li class="breadcrumb-item text-muted">
+                        <a class="text-muted text-hover-success">
+                            Preencha com os dados do seu negócio
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+        <div id="kt_app_content_container" class="app-container container-xxl">
+            @if (_store != null)
+            {
+                <div class="card mb-5">
+                    <div class="card-header card-header-stretch pb-0">
+                        <div class="card-title">
+                            <h3 class="m-0">Geral</h3>
+                        </div>
+                    </div>
+                    <div class="card-body border-top p-9">
+                        <div class="row mb-10">
+                            <label class="col-4 col-form-label fw-semibold fs-6"></label>
+                            <div class="col-8 text-start">
+                                <Logo Thumbnail="@(_store.LogoUrl)" OnUploaded="s => _store.LogoUrl = s" OnRemove="s => _store.LogoUrl = s"/>
+                                <Banner Thumbnail="@(_store.BannerUrl)" OnUploaded="s => _store.BannerUrl = s" OnRemove="s => _store.BannerUrl = s"/>
+                            </div>
+                        </div>
+                        <div class="row mb-6">
+                            <label class="col-4 col-form-label required fw-semibold fs-6">Nome da loja</label>
+                            <div class="col-8 fv-row fv-plugins-icon-container">
+                                <input type="text" class="form-control form-control-lg form-control-solid" @bind="@(_store.Name)" maxlength="65" autocomplete="off">
+                                <div class="text-muted fs-7">Este é o nome que vai aparecer para os seus clientes dentro do aplicativo.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-4 col-form-label fw-semibold fs-6">Descrição</label>
+                            <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                <textarea class="form-control form-control-lg form-control-solid" placeholder="Descrição resumida de até 600 caracteres" rows="3" maxlength="600" autocomplete="off" @bind="_store.Description"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-4 col-form-label fw-semibold required fs-6">Categoria</label>
+                            <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                <select class="form-select form-select-solid" @bind="@(_store.Category)">
+                                    <option value="restaurant">Restaurante</option>
+                                    <option value="market">Mercado</option>
+                                </select>
+                                <div class="text-muted fs-7">Esta é a informação que aparece ao lado da sua loja na listagem e classifica-a nas listas.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Telefone ou celular</label>
+                            <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                <input type="text" class="form-control form-control-lg form-control-solid phone" placeholder="Telefone de contato" @bind="@(_store.Phone)">
+                                <div class="text-muted fs-7">Este será o telefone usado pelos clientes que estiverem com pedido em andamento para entrar em contato com seu restaurante e tirar dúvidas.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                if (_store.User != null)
+                {
+                    <div class="card mb-5">
+                        <div class="card-header card-header-stretch pb-0">
+                            <div class="card-title">
+                                <h3 class="m-0">Responsável da loja</h3>
+                            </div>
+                        </div>
+                        <div class="card-body border-top p-9">
+                            <div class="row mb-6">
+                                <label class="col-4 col-form-label required fw-semibold fs-6">Nome completo</label>
+                                <div class="col-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid" @bind="@(_store.OwnerName)" maxlength="65" autocomplete="off">
+                                </div>
+                            </div>
+                            @* <div class="row mb-6"> *@
+                            @*     <label class="col-4 col-form-label required fw-semibold fs-6">E-mail</label> *@
+                            @*     <div class="col-8 fv-row fv-plugins-icon-container"> *@
+                            @*         <input type="email" class="form-control form-control-lg form-control-solid" @bind="@(_store.User.Email)" maxlength="150" autocomplete="off"> *@
+                            @*     </div> *@
+                            @* </div> *@
+                            <div class="row mb-0">
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6 required">CPF do responsável legal</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" readonly="readonly" class="form-control form-control-lg form-control-solid document" autocomplete="off" placeholder="000.000.000-00" @bind="@(_store.OwnerDocument)">
+                                    <div class="text-muted fs-7">Documento de quem representa legalmente a empresa, seja como dono, sócio ou sócio administrativo.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                if (_store.Address != null)
+                {
+                    <div class="card mb-5">
+                        <div class="card-header card-header-stretch pb-0">
+                            <div class="card-title">
+                                <h3 class="m-0">Endereço</h3>
+                            </div>
+                        </div>
+                        <div class="card-body border-top p-9">
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">CEP</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid zipcode" value="@(_store.Address.Zipcode)" placeholder="00000-000" @oninput="async (e) => await LoadAddressByZipcode(e.Value?.ToString())">
+                                    <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" class="d-block link-primary fw-semibold mt-2">Descubra seu CEP</a>
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Estado</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" readonly="readonly" class="form-control form-control-lg form-control-solid" @bind="@(_store.Address.State)">
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Cidade</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" readonly="readonly" class="form-control form-control-lg form-control-solid" @bind="@(_store.Address.City)">
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Bairro</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid" @bind="@(_store.Address.Neighborhood)">
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Logradouro</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid" @bind="@(_store.Address.Line1)">
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Número</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid" @bind="@(_store.Address.Number)">
+                                </div>
+                            </div>
+                            <div class="row mb-6">
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Complemento</label>
+                                <div class="col-lg-8 fv-row fv-plugins-icon-container">
+                                    <input type="text" class="form-control form-control-lg form-control-solid" placeholder="Apartamento ou bloco" @bind="@(_store.Address.Line2)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="text-end gap-2 pt-2 pb-6">
+                    @if (_loading)
+                    {
+                        <_LoadingButton Class="btn-sm btn-success" Text="Salvando..."/>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-sm btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+                    }
+                </div>
+            }
+            else
+            {
+                <p>Carregando...</p>
+            }
+        </div>
+
+    </div>
+</div>
+
+@code
+{
+    private StoreModel? _store;
+    private bool _loading;
+    private string? _userWhatsappNumber;
+    private string? _externalId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userWhatsappNumber = authState.User.FindFirstValue(ClaimTypes.PrimarySid);
+        _externalId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/store/get");
+            if (response.IsSuccessRequest)
+            {
+                _store = JsonConvert.DeserializeObject<StoreModel>(response.Json ?? string.Empty);
+
+                StateHasChanged();
+
+                await JsRuntime.InvokeVoidAsync("InputMask.Zipcode");
+                await JsRuntime.InvokeVoidAsync("InputMask.Phone");
+                await JsRuntime.InvokeVoidAsync("InputMask.Document");
+            }
+            else
+                await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+    }
+
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/store/update", _store);
+        _loading = false;
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Perfil da loja alterado com sucesso.");
+
+        NavigationManager.NavigateTo("/store");
+    }
+
+    async Task LoadAddressByZipcode(string? zipcode)
+    {
+        if (_store?.Address == null)
+            return;
+
+        if (zipcode?.Length < 9)
+            return;
+
+        _store.Address.Zipcode = zipcode;
+        _loading = true;
+
+        try
+        {
+            HttpClient client = HttpClientFactory.CreateClient();
+            var address = await client.GetFromJsonAsync<ViacepAddress>($"https://viacep.com.br/ws/{zipcode}/json");
+
+            if (address == null)
+                return;
+
+    //_store.Address.CityState = $"{address.City}, {address.State}";
+            _store.Address.Line1 = address.Line1;
+            _store.Address.Neighborhood = address.Neighborhood;
+        }
+        catch
+        {
+    // ignored
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

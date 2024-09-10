@@ -1,0 +1,7 @@
+﻿.form-control.form-control-solid {
+    border-color: var(--bs-gray-300);
+}
+
+.form-select.form-select-solid {
+    border-color: var(--bs-gray-300);
+}

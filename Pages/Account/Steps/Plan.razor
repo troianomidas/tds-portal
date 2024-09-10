@@ -1,0 +1,217 @@
+@inject IJSRuntime JsRuntime
+@inject DataRequest DataRequest
+
+<div class="d-flex flex-column mb-0">
+    <label class="nav-link btn btn-outline btn-outline-dashed btn-color-dark btn-active btn-active-success d-flex flex-stack text-start p-4 mb-2 active" aria-selected="true" role="tab">
+        <div class="d-flex align-items-center me-2">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center fs-2 fw-bold flex-wrap">
+                    Plano Mensal
+                </div>
+                <div class="fw-semibold opacity-75">
+                    Pagamento por PIX ou boleto bancário.
+                </div>
+            </div>
+        </div>
+        <div class="ms-5">
+            <span class="mb-2">R$ </span>
+            @if (Model.Subscription != null)
+            {
+                <span class="fs-2x fw-bold">@(CurrencyUtils.MoneyWithoutCurrency(Model.Subscription.Amount))</span>
+            }
+            <span class="fs-7 opacity-50">
+                /
+                <span data-kt-element="period">mês</span>
+            </span>
+        </div>
+    </label>
+
+    <div class="tab-content rounded h-100 bg-light p-10">
+        <div class="tab-pane fade active show" id="kt_upgrade_plan_startup" role="tabpanel">
+            <div class="pt-1">
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Link do Cardápio Online
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Gestor de pedidos balcão ou mesa
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Indicadores: clientes, vendas e produtos
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Cupons de desconto
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Controle de estoque
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Aba de avaliações
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Aplicativo para garçom
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Impressão Direta em Impressora Térmica
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+                <div class="d-flex align-items-center mb-0">
+                    <span class="fw-semibold fs-5 text-gray-700 flex-grow-1">
+                        Suporte técnico todos os dias
+                    </span>
+                    <i class="ki-outline ki-check-circle fs-1 text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-8 mb-10">
+        <div class="col-12">
+            <h4 class="text-gray-800 mb-2">
+                Código de cupom
+            </h4>
+            <div class="d-flex">
+                @if (Model.Subscription?.ReferralId == null)
+                {
+                    <input type="text" class="form-control me-3 flex-grow-1" placeholder="Código de desconto" @bind="@(_referralCode)">
+                    if (_referralLoading)
+                    {
+                        <button class="btn btn-light btn-active-light-success fw-bold flex-shrink-0">Validando...</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-light btn-active-light-success fw-bold flex-shrink-0" @onclick="async () => await ValidateReferralCodeAsync()">Aplicar</button>
+                    }
+                }
+                else
+                {
+                    <div class="overflow-auto pb-5">
+                        <div class="notice d-flex bg-light-success rounded border-success border border-dashed p-6">
+                            <i class="ki-outline ki-check fs-2tx text-success me-4"></i>
+                            <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                                <div class="mb-3 mb-md-0 fw-semibold">
+                                    <h4 class="text-gray-900 fw-bold">Cupom aplicado!</h4>
+                                    <div class="fs-6 text-gray-700">Parabéns! Você recebeu desconto em suas mensalidades</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (_fieldError == "referralCode")
+            {
+                <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+            }
+        </div>
+    </div>
+</div>
+<div class="d-flex flex-stack pt-0 mb-0">
+    <div class="mr-2">
+        <button type="button" class="btn btn-light-success me-3" @onclick="async () => await OnBack.InvokeAsync(true)">
+            <i class="ki-outline ki-arrow-left fs-4 me-1"></i> Voltar
+        </button>
+    </div>
+
+    <div>
+        @if (_loading)
+        {
+            <_LoadingButton Class="btn-success"/>
+        }
+        else
+        {
+            <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">
+                Continuar
+                <i class="ki-outline ki-arrow-right fs-4 ms-1"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public required StoreModel Model { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnContinue { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnBack { get; set; }
+
+    private string? _referralCode;
+    private ReferralCodeModel? _referral;
+
+    private bool _loading;
+    private bool _referralLoading;
+    private string? _msgError;
+    private string? _fieldError;
+
+    async Task SaveAsync()
+    {
+        _msgError = null;
+        _fieldError = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        await OnContinue.InvokeAsync(true);
+    }
+
+    async Task ValidateReferralCodeAsync()
+    {
+        if (Model.Subscription == null)
+            return;
+
+        _msgError = null;
+        _fieldError = null;
+        _referralLoading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, $"/ReferralCode?Code={_referralCode}");
+        _referralLoading = false;
+
+        _referral = null;
+        Model.Subscription.ReferralId = null;
+        Model.Subscription.DiscountAmount = 0;
+
+        if (!response.IsSuccessRequest)
+        {
+            _fieldError = "referralCode";
+            _msgError = response.Error;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        _referral = JsonConvert.DeserializeObject<ReferralCodeModel?>(response.Json ?? string.Empty);
+        if (_referral == null)
+            return;
+
+        Model.Subscription.ReferralId = _referral.Id;
+        Model.Subscription.DiscountAmount = _referral.Discount;
+        Model.Subscription.Amount = Model.Subscription.BaseAmount - _referral.Discount;
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Código de desconto aplicado com sucesso.");
+
+        StateHasChanged();
+    }
+}

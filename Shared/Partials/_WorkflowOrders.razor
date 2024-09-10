@@ -1,0 +1,398 @@
+﻿@inject DataRequest DataRequest
+@inject SweetAlertService SweetAlertService
+@inject IJSRuntime JsRuntime
+
+<div id="kt_app_sidebar" class="app-sidebar">
+    <div class="app-sidebar-primary">
+        <div class="app-sidebar-nav flex-grow-1 hover-scroll-overlay-y px-5 pt-2" id="kt_app_sidebar_primary_nav">
+            <ul class="nav">
+                @if (Orders != null)
+                {
+                    <li class="nav-item py-2">
+                        <a data-bs-toggle="tab" href="#app_sidebar_pending" class="nav-link py-4 px-1 btn active">
+                            <i class="ki-outline ki-time fs-1"></i>
+                            @if (Orders.Count(x => x.Status == OrderStatusConst.Pending) > 0)
+                            {
+                                <div class="badge badge-circle badge-success position-absolute translate-middle ms-13 mt-10 h-15px w-15px fs-8">@(Orders.Count(x => x.Status == OrderStatusConst.Pending))</div>
+                            }
+                            <span class="pt-2 fs-9 fs-lg-7 fw-bold">Aguardando Aprovação</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2">
+                        <a data-bs-toggle="tab" href="#app_sidebar_pending" class="nav-link py-4 px-1 btn">
+                            <i class="ki-outline ki-check-circle fs-1"></i>
+                            @if (Orders.Count(x => x.Status == OrderStatusConst.Confirmed) > 0)
+                            {
+                                <div class="badge badge-circle badge-success position-absolute translate-middle ms-13 mt-10 h-15px w-15px fs-8">@(Orders.Count(x => x.Status == OrderStatusConst.Confirmed))</div>
+                            }
+                            <span class="pt-2 fs-9 fs-lg-7 fw-bold">Aprovado</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2">
+                        <a data-bs-toggle="tab" href="#app_sidebar_preparing" class="nav-link py-4 px-1 btn">
+                            @if (Orders.Count(x => x.Status == OrderStatusConst.Preparation) > 0)
+                            {
+                                <div style="margin-bottom: -15px" class="badge badge-circle badge-success translate-middle h-15px w-15px ms-13 fs-8">@(Orders.Count(x => x.Status == OrderStatusConst.Preparation))</div>
+                            }
+                            <i class="ki-outline ki-watch fs-1"></i>
+                            <span class="pt-2 fs-9 fs-lg-7 fw-bold">Preparando</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2">
+                        <a data-bs-toggle="tab" href="#app_sidebar_delivery" class="nav-link py-4 px-1 btn">
+                            @if (Orders.Count(x => x.Status == OrderStatusConst.Delivery) > 0)
+                            {
+                                <div style="margin-bottom: -15px" class="badge badge-circle badge-success translate-middle h-15px w-15px ms-13 fs-8">@(Orders.Count(x => x.Status == OrderStatusConst.Delivery))</div>
+                            }
+                            <i class="ki-outline ki-delivery-time fs-1"></i>
+                            <span class="pt-2 fs-9 fs-lg-7 fw-bold">Entregando</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2">
+                        <a data-bs-toggle="tab" href="#app_sidebar_delivery" class="nav-link py-4 px-1 btn">
+                            @if (Orders.Count(x => x.Status == OrderStatusConst.Delivery) > 0)
+                            {
+                                <div style="margin-bottom: -15px" class="badge badge-circle badge-success translate-middle h-15px w-15px ms-13 fs-8">@(Orders.Count(x => x.Status == OrderStatusConst.Delivery))</div>
+                            }
+                            <i class="ki-outline ki-calendar-tick fs-1"></i>
+                            <span class="pt-2 fs-9 fs-lg-7 fw-bold">Agendado</span>
+                        </a>
+                    </li>
+                }
+
+            </ul>
+        </div>
+    </div>
+    <div class="app-sidebar-secondary">
+        <div id="kt_app_sidebar_secondary_wrapper" class="scroll-y">
+            <div class="tab-content pe-1 ps-1">
+                <div class="tab-pane fade show active" id="app_sidebar_pending" role="tabpanel">
+                    <div class="card card-reset card-p-0">
+                        <div class="card-body text-center">
+                            @if (Orders == null)
+                            {
+                                <h4 class="fw-bold text-gray-900 my-4">Carregando...</h4>
+                            }
+                            else
+                            {
+                                if (Orders.Count(x => x.Status == 1) == 0)
+                                {
+                                    <img src="@(StorageConst.FrontDoor)/portal/assets/media/auth/coming-soon.png" class="h-150px" alt=""/>
+                                    <h4 class="fw-bold text-gray-900 my-4">Nenhum pedido pendente</h4>
+                                    <span class="fw-semibold text-gray-700 mb-4 d-block">Atualização da fila de pedidos é feita em tempo real</span>
+                                }
+                                else
+                                {
+                                    foreach (OrderModel order in Orders.Where(x => x.Status == OrderStatusConst.Pending))
+                                    {
+                                        <div class="d-flex align-items-center mb-3">
+                                            <span data-kt-element="bullet" class="bullet bullet-vertical d-flex align-items-center min-h-70px mh-100 me-4 bg-primary"></span>
+                                            <div class="flex-grow-1 me-0">
+                                                <div class="text-gray-800 fw-semibold fs-3 text-start d-block mb-1">
+                                                    Pedido nº @(order.Number)
+                                                    <span class="text-gray-600 fw-semibold fs-7 ms-2">
+                                                        @(DateTimeUtils.GetFormattedDiffTime(order.CreatedAt))
+                                                    </span>
+                                                </div>
+                                                <div class="text-gray-600 fw-semibold fs-6 text-start d-block mb-1">
+                                                    @(order.GetDeliveryType())
+                                                </div>
+                                                <div class="text-gray-700 fw-semibold fs-6 text-start d-block">
+                                                    24/05, @(order.DeliveryEstimateBeginAt.ToShortTimeString()) - @(order.DeliveryEstimateEndAt.ToShortTimeString())
+                                                </div>
+
+                                            </div>
+                                            <div class="me-1">
+                                                <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true">
+                                                    <i class="ki-outline ki-dots-square fs-1 text-gray-500 me-n1"></i>
+                                                </button>
+                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-150px" data-kt-menu="true" style="">
+                                                    <div class="menu-item px-3">
+                                                        <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">Ações rápidas</div>
+                                                    </div>
+                                                    <div class="separator mb-3 opacity-75"></div>
+
+                                                    <div class="menu-item px-3 mb-0">
+                                                        <span class="menu-link px-3" @onclick="async () => await OpenOrderDetailAsync(order.Id)">Detalhes</span>
+                                                    </div>
+                                                    @if (order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                                    {
+                                                        <div class="menu-item px-3 mb-0">
+                                                            <span class="menu-link px-3" @onclick="async () => await OpenDispatchModalAsync(order.Id, order.Number)">Despachar</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="menu-item px-3 mb-0">
+                                                            <span class="menu-link px-3" @onclick="async () => await UpdateOrderStatusAsync(order.Id, OrderStatusConst.Preparation)">Aceitar</span>
+                                                        </div>
+                                                    }
+                                                    <div class="menu-item px-3 mb-0">
+                                                        <span class="menu-link px-3" @onclick="async () => await DeclineOrderAsync(order.Id, order.Number)">Cancelar</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        if (order.IsLoading)
+                                        {
+                                            <_LoadingButton Class="btn-sm btn-secondary w-100"/>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-light-primary w-100" @onclick="async () => await UpdateOrderStatusAsync(order.Id, OrderStatusConst.Preparation)">ACEITAR</button>
+                                        }
+                                        <div class="separator separator-dashed my-4"></div>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="app_sidebar_preparing" role="tabpanel">
+                    <div class="card card-reset card-p-0">
+                        <div class="card-body text-center pt-0">
+                            @if (Orders == null)
+                            {
+                                <h4 class="fw-bold text-gray-900 my-4">Carregando...</h4>
+                            }
+                            else
+                            {
+                                if (Orders.Count(x => x.Status == OrderStatusConst.Preparation) == 0)
+                                {
+                                    <img src="@(StorageConst.FrontDoor)/portal/assets/media/auth/coming-soon.png" class="h-150px" alt=""/>
+                                    <h4 class="fw-bold text-gray-900 my-4">Nenhum pedido em preparo</h4>
+                                    <span class="fw-semibold text-gray-700 mb-4 d-block">Atualização da fila de pedidos é feita em tempo real</span>
+                                }
+                                else
+                                {
+                                    foreach (OrderModel order in Orders.Where(x => x.Status == OrderStatusConst.Preparation))
+                                    {
+                                        <div class="d-flex align-items-center mb-3">
+                                            <span data-kt-element="bullet" class="bullet bullet-vertical d-flex align-items-center min-h-70px mh-100 me-4 bg-warning"></span>
+                                            <div class="flex-grow-1 me-0">
+                                                <div class="text-gray-800 fw-semibold fs-3 text-start d-block mb-1">
+                                                    Pedido nº @(order.Number)
+                                                    <span class="text-gray-600 fw-semibold fs-7 ms-2">
+                                                        @(DateTimeUtils.GetFormattedDiffTime(order.CreatedAt))
+                                                    </span>
+                                                </div>
+                                                <div class="text-gray-600 fw-semibold fs-6 text-start d-block mb-1">
+                                                    @(order.GetDeliveryType())
+                                                </div>
+                                                <div class="text-gray-700 fw-semibold fs-6 text-start d-block">
+                                                    24/05, @(order.DeliveryEstimateBeginAt.ToShortTimeString()) - @(order.DeliveryEstimateEndAt.ToShortTimeString())
+                                                </div>
+
+                                            </div>
+                                            <div class="me-1">
+                                                <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true">
+                                                    <i class="ki-outline ki-dots-square fs-1 text-gray-500 me-n1"></i>
+                                                </button>
+                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-150px" data-kt-menu="true" style="">
+                                                    <div class="menu-item px-3">
+                                                        <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">Ações rápidas</div>
+                                                    </div>
+                                                    <div class="separator mb-3 opacity-75"></div>
+
+                                                    <div class="menu-item px-3 mb-0">
+                                                        <span class="menu-link px-3" @onclick="async () => await OpenOrderDetailAsync(order.Id)">Detalhes</span>
+                                                    </div>
+                                                    @if (order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                                    {
+                                                        <div class="menu-item px-3 mb-0">
+                                                            <span class="menu-link px-3" @onclick="async () => await OpenDispatchModalAsync(order.Id, order.Number)">Despachar</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="menu-item px-3 mb-0">
+                                                            <span class="menu-link px-3" @onclick="async () => await UpdateOrderStatusAsync(order.Id, OrderStatusConst.Finished)">Concluir</span>
+                                                        </div>
+                                                    }
+                                                    <div class="menu-item px-3 mb-0">
+                                                        <span class="menu-link px-3" @onclick="async () => await DeclineOrderAsync(order.Id, order.Number)">Cancelar</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        if (order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                        {
+                                            if (order.IsLoading)
+                                            {
+                                                <_LoadingButton Class="btn-sm btn-secondary w-100"/>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-light-warning w-100" @onclick="async () => await OpenDispatchModalAsync(order.Id, order.Number)">DESPACHAR</button>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (order.IsLoading)
+                                            {
+                                                <_LoadingButton Class="btn-sm btn-secondary w-100"/>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-light-warning w-100" @onclick="async () => await UpdateOrderStatusAsync(order.Id, OrderStatusConst.Finished)">CONCLUIR</button>
+                                            }
+                                        }
+                                        <div class="separator separator-dashed my-4"></div>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="app_sidebar_delivery" role="tabpanel">
+                    <div class="card card-reset card-p-0">
+                        <div class="card-body text-center pt-0">
+                            @if (Orders == null)
+                            {
+                                <h4 class="fw-bold text-gray-900 my-4">Carregando...</h4>
+                            }
+                            else
+                            {
+                                if (Orders.Count(x => x.Status == OrderStatusConst.Delivery) == 0)
+                                {
+                                    <img src="@(StorageConst.FrontDoor)/portal/assets/media/auth/coming-soon.png" class="h-150px" alt=""/>
+                                    <h4 class="fw-bold text-gray-900 my-4">Nenhum pedido em entrega</h4>
+                                    <span class="fw-semibold text-gray-700 mb-4 d-block">Atualização da fila de pedidos é feita em tempo real</span>
+                                }
+                                else
+                                {
+                                    foreach (OrderModel order in Orders.Where(x => x.Status == OrderStatusConst.Delivery))
+                                    {
+                                        <div class="d-flex align-items-center mb-3">
+                                            <span data-kt-element="bullet" class="bullet bullet-vertical d-flex align-items-center min-h-70px mh-100 me-4 bg-warning"></span>
+                                            <div class="flex-grow-1 me-0">
+                                                <div class="text-gray-800 fw-semibold fs-3 text-start d-block">
+                                                    Pedido nº @(order.Number)
+                                                    @* <span class="text-gray-600 fw-semibold fs-7 ms-2"> *@
+                                                    @*     @(DateTimeUtils.GetFormattedDiffTime(order.CreatedAt)) *@
+                                                    @* </span> *@
+                                                </div>
+
+                                                <div class="text-gray-600 fw-semibold fs-7 text-start d-block">
+                                                    @(order.GetDeliveryType())
+                                                </div>
+                                                <div class="text-gray-700 fw-semibold fs-6 text-start d-block">
+                                                    @(order.DeliveryEstimateBeginAt.ToShortTimeString()) - @(order.DeliveryEstimateEndAt.ToShortTimeString())
+                                                </div>
+                                            </div>
+                                        </div>
+                                        if (order.IsLoading)
+                                        {
+                                            <_LoadingButton Class="btn-sm btn-secondary w-100"/>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-secondary w-100" @onclick="async () => await UpdateOrderStatusAsync(order.Id, OrderStatusConst.Finished)">Finalizar</button>
+                                        }
+                                        <div class="separator separator-dashed my-4"></div>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<_OrderDetail Order="_orderDetail"/>
+
+@if (_orderDispatchId > 0)
+{
+    <_DispatchModal OrderId="@(_orderDispatchId)" OrderNumber="@(_orderDispatchNumber)" OnSaved="async (e) => await DispatchCallbackAsync(e.Collaborator, e.OrderId)"/>
+}
+
+@code
+{
+    [Parameter]
+    public List<OrderModel>? Orders { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnUpdated { get; set; }
+
+    private OrderModel? _orderDetail;
+    private int _orderDispatchId;
+    private int _orderDispatchNumber;
+
+    async Task OpenOrderDetailAsync(int orderId)
+    {
+        if (Orders == null)
+            return;
+
+        _orderDetail = Orders.FirstOrDefault(x => x.Id == orderId);
+
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "shared_order_detail_modal");
+    }
+
+    async Task UpdateOrderStatusAsync(int orderId, int status)
+    {
+        if (Orders == null)
+            return;
+
+        Orders.First(x => x.Id == orderId).IsLoading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/order/status", new
+        {
+            Status = status,
+            OrderIds = new List<int>(1) { orderId }
+        });
+
+        Orders.First(x => x.Id == orderId).IsLoading = false;
+
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        Orders.First(x => x.Id == orderId).Status = status;
+        await OnUpdated.InvokeAsync(true);
+    }
+
+    async Task DeclineOrderAsync(int orderId, int orderNumber)
+    {
+        if (Orders == null)
+            return;
+
+        SweetAlertResult result = await SweetAlertService.FireAsync(new SweetAlertOptions
+        {
+            Title = "Atenção!",
+            Text = $"Essa operação irá cancelar o pedido nº {orderNumber}. Deseja confirmar?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Confirmar",
+            ConfirmButtonColor = "#F1416C",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(result.Value))
+            await UpdateOrderStatusAsync(orderId, 9);
+    }
+
+    async Task OpenDispatchModalAsync(int orderId, int orderNumber)
+    {
+        _orderDispatchId = orderId;
+        _orderDispatchNumber = orderNumber;
+        StateHasChanged();
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_workflow_dispatch_modal");
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_workflow_dispatch_modal");
+    }
+
+    async Task DispatchCallbackAsync(CollaboratorModal? collaborator, int orderId)
+    {
+        if (Orders == null)
+            return;
+
+        Orders.First(x => x.Id == orderId).Status = OrderStatusConst.Delivery;
+        Orders.First(x => x.Id == orderId).Collaborator = collaborator;
+        StateHasChanged();
+        await OnUpdated.InvokeAsync(true);
+    }
+}

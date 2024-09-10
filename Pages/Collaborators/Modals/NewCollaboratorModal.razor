@@ -1,0 +1,134 @@
+@inject IJSRuntime JsRuntime
+@inject DataRequest DataRequest
+
+<div class="modal fade" id="new_collaborator_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-800px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-danger" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    @if (Collaborator?.Id > 0)
+                    {
+                        <h1 class="mb-3">Editar colaborador</h1>    
+                    }
+                    else
+                    {
+                        <h1 class="mb-3">Cadastrar colaborador</h1>
+                    }
+                    <div class="text-muted fw-semibold fs-5">Mantenha um registro de fornecedores e entregadores para designá-los a pedidos ou itens específicos.</div>
+                </div>
+                @if (Collaborator != null)
+                {
+                    <div class="form-floating mb-7">
+                        <input type="text" name="name" class="form-control form-control-solid" placeholder="Nome completo" maxlength="45" autocomplete="off" @bind="@(Collaborator.Name)" @onfocusout="() => CustomerNameToUpperCase()"/>
+                        <label class="required">Nome completo</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-floating mb-7">
+                                <input type="text" name="phone" class="form-control form-control-solid phone" placeholder="Celular" maxlength="45" autocomplete="off" @bind="@(Collaborator.Phone)"/>
+                                <label class="required">Celular</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating mb-7">
+                                <input type="text" name="document" class="form-control form-control-solid document" placeholder="CPF ou CNPJ" maxlength="45" autocomplete="off" @bind="@(Collaborator.Document)"/>
+                                <label>CPF ou CNPJ</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-floating mb-7">
+                                <input type="text" name="email" class="form-control form-control-solid" placeholder="E-mail" maxlength="45" autocomplete="off" @bind="@(Collaborator.Email)"/>
+                                <label>E-mail</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating mb-7">
+                                <select name="group" class="form-select form-select-solid" @bind="@(Collaborator.GroupName)">
+                                    <option value="deliveryman" selected="selected">Entregador</option>
+                                    <option value="supplier">Fornecedor</option>
+                                </select>
+                                <label>Grupo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-floating mb-10">
+                        <input type="text" class="form-control form-control-solid" placeholder="Descrição" @bind="@(Collaborator.Description)" maxlength="250" autocomplete="off"/>
+                        <label>Descrição</label>
+                    </div>
+                }
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3" @onclick="async () => await CloseAsync()">
+                        Fechar
+                    </button>
+                    @if (_loading)
+                    {
+                        <_LoadingButton Class="btn-success" Text="Salvando"/>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">
+                            Salvar colaborador
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public CollaboratorModal? Collaborator { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnSave { get; set; }
+
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("InputMask.Phone");
+        await JsRuntime.InvokeVoidAsync("InputMask.Document");
+    }
+
+    async Task SaveAsync()
+    {
+        if (Collaborator == null)
+            return;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+
+        ApiResponse response = await DataRequest.SendAsync(Collaborator.Id == 0 ? HttpMethod.Post : HttpMethod.Put, "/Collaborator", Collaborator);
+        _loading = false;
+
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        await CloseAsync();
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Colaborador cadastrado com sucesso.");
+        
+        await OnSave.InvokeAsync(true);
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "new_collaborator_modal");
+
+    void CustomerNameToUpperCase()
+    {
+        if (Collaborator == null)
+            return;
+
+        Collaborator.Name = CustomerUtils.FirstCharToUpper(Collaborator.Name);
+    }
+}

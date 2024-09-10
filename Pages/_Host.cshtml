@@ -1,0 +1,45 @@
+@page "/"
+@using WebApp.Constants
+@using Microsoft.AspNetCore.Components.Web
+@namespace WebApp.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="~/"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/css/site.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/css/monthSelect.css" rel="stylesheet" type="text/css"/>
+    <link href="WebApp.styles.css" rel="stylesheet" type="text/css"/>
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered"/>
+</head>
+<body id="kt_app_body" data-kt-app-header-fixed="true" data-kt-app-header-fixed-mobile="true" data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-sidebar-stacked="true" data-kt-app-sidebar-secondary-enabled="true" class="app-default">
+<component type="typeof(App)" render-mode="ServerPrerendered"/>
+<div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">
+  <i class="ki-outline ki-arrow-up"></i>
+</div>
+<script src="/assets/plugins/global/jquery.min.js"></script>
+<script src="/assets/plugins/global/plugins.bundle.js"></script>
+<script src="/assets/js/scripts.bundle.js"></script>
+<script src="/assets/js/custom/widgets.js"></script>
+<script src="/assets/js/widgets.bundle.js"></script>
+<script src="/assets/plugins/global/plugins.bundle.js"></script>
+<script src="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.js"></script>
+<script src="/assets/js/custom/pt.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="/assets/js/custom/monthSelect.js"></script>
+<script src="/assets/plugins/global/jquery.mask.min.js"></script>
+<script src="/assets/plugins/custom/draggable/draggable.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.2/howler.core.min.js"></script>
+<script src="helper.js"></script>
+<script src="_framework/blazor.server.js"></script>
+<script src="_content/CurrieTechnologies.Razor.SweetAlert2/sweetAlert2.min.js"></script>
+</body>
+</html>

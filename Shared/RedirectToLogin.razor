@@ -1,0 +1,21 @@
+﻿@using System.Security.Claims
+@inject ILogger<RedirectToLogin> Logger
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@code
+{
+    protected override async Task OnInitializedAsync()
+    {
+        var route = "/account/login";
+
+        AuthenticationState resp = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (resp.User.Identity?.IsAuthenticated ?? false)
+        {
+            if (!resp.User.IsInRole("store-subscription-active"))
+                route = "/subscription/expired";
+        }
+        
+        NavigationManager.NavigateTo(route, true);
+    }
+}

@@ -1,0 +1,53 @@
+.pac-container {
+    z-index: 9999999;
+}
+
+:root {
+    --bs-success: #129fa5;
+    --bs-success-secondary: #50cd89;
+    --bs-success-active: #084749;
+    --bs-text-success: #129fa5;
+}
+
+.scrolltop{
+    background-color: #129fa5 !important;
+}
+
+.scrolltop:hover{
+    background-color: #129fa5 !important;
+}
+
+.flatpickr-calendar.inline, .flatpickr-calendar.open {
+    width: 313px !important;
+    top: 5px;
+}
+
+.app-sidebar {
+    padding-top: 30px;
+    padding-bottom: 15px;
+}
+
+.form-check-input:checked {
+    background-color: #129fa5;
+    border-color: #084749;
+}
+
+.btn-check:active+.btn.btn-outline.btn-outline-dashed, .btn-check:checked+.btn.btn-outline.btn-outline-dashed, .btn.btn-outline.btn-outline-dashed.active, .btn.btn-outline.btn-outline-dashed.show, .btn.btn-outline.btn-outline-dashed:active:not(.btn-active), .btn.btn-outline.btn-outline-dashed:focus:not(.btn-active), .btn.btn-outline.btn-outline-dashed:hover:not(.btn-active), .show>.btn.btn-outline.btn-outline-dashed {
+    border-color: var(--bs-success);
+}
+
+.nav-line-tabs .nav-item .nav-link.active, .nav-line-tabs .nav-item .nav-link:hover:not(.disabled), .nav-line-tabs .nav-item.show .nav-link {
+    background-color: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--bs-success);
+    transition: color .2s ease;
+}
+
+.nav-link {
+    color: var(--bs-success);
+}
+
+.flatpickr-monthSelect-month.selected, .flatpickr-monthSelect-month.startRange, .flatpickr-monthSelect-month.endRange {
+    background-color: #129fa5 !important;
+    border-color: #084749 !important;
+}

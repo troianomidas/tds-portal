@@ -1,0 +1,28 @@
+﻿@switch (Status)
+{
+    case 1:
+        <span class="badge badge-light-primary">Pendente</span>
+        break;
+    case 2:
+        <span class="badge badge-light-info">Confirmado</span>
+        break;
+    case 3:
+        <span class="badge badge-light-warning">Preparando</span>
+        break;
+    case 4:
+        <span class="badge badge-light-info">Entregando</span>
+        break;
+    case 5:
+        <span class="badge badge-light-success">Concluído</span>
+        break;
+    case 9:
+        <span class="badge badge-light-danger">Cancelado</span>
+        break;
+}
+
+@code
+{
+    [Parameter]
+    public int Status { get; set; }
+}
+

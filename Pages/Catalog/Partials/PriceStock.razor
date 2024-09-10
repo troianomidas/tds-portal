@@ -1,0 +1,106 @@
+﻿@inject IJSRuntime JsRuntime
+
+<div class="card card-flush py-4 mb-0">
+    <div class="card-body">
+        <div class="mb-10 fv-row fv-plugins-icon-container">
+            <label class="required form-label">Preço de venda</label>
+            <div class="d-flex align-items-center position-relative">
+                <span class="fs-6 fw-semibold position-absolute ms-4 text-gray-700">R$</span>
+                <input type="text" class="form-control form-control-solid w-100 ps-12 money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(Product.UnitPrice)">
+            </div>
+            <div class="text-muted fs-7">Preço base de venda do item.</div>
+        </div>
+        <div class="fv-row mb-0">
+            <label class="fs-6 fw-semibold mb-2">
+                Desconto
+                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" aria-label="Selecione um tipo de desconto que será aplicado a este catálogo" data-bs-original-title="Selecione um tipo de desconto que será aplicado a este catálogo" data-kt-initialized="1"></i>
+            </label>
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']" data-kt-initialized="1">
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-success d-flex text-start p-6 @(Product.DiscountType == 1 ? "active" : "")" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" checked="@(Product.DiscountType == 1)" value="1" @onchange='() => Product.DiscountType = 1'>
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Nenhum</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-success d-flex text-start p-6 @(Product.DiscountType == 2 ? "active" : "")" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="2" checked="@(Product.DiscountType == 2)" @onchange='() => Product.DiscountType = 2'>
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Porcentagem %</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-success d-flex text-start p-6 @(Product.DiscountType == 3 ? "active" : "")" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="3" checked="@(Product.DiscountType == 3)" @onchange='() => Product.DiscountType = 3'>
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Preço fixo</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        @if (Product.DiscountType != 1)
+        {
+            <div class="d-flex flex-wrap gap-5 mt-5">
+                <div class="fv-row w-100 flex-md-root">
+                    @switch (Product.DiscountType)
+                    {
+                        case 2:
+                            <label class="form-label">Porcentagem (%)</label>
+                            <div class="d-flex align-items-center position-relative">
+                                <span class="fs-6 fw-semibold position-absolute ms-4 text-gray-700">%</span>
+                                <input type="text" class="form-control form-control-solid w-100 ps-12 money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(Product.Discount)">
+                            </div>
+                            break;
+                        case 3:
+                            <label class="form-label">Valor (R$)</label>
+                            <div class="d-flex align-items-center position-relative">
+                                <span class="fs-6 fw-semibold position-absolute ms-4 text-gray-700">R$</span>
+                                <input type="text" class="form-control form-control-solid w-100 ps-12 money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(Product.Discount)">
+                            </div>
+                            break;
+                    }
+                    <div class="text-muted fs-7">Se o desconto for mais de 10% ou R$ 5,00, o item aparecerá na área de destaque do catálogo.</div>
+                </div>
+            </div>
+        }
+
+        <div class="mt-10 mb-0 fv-row fv-plugins-icon-container">
+            <label class="form-label">Ativar o estoque deste item?</label>
+            <div class="mb-0 fv-row fv-plugins-icon-container">
+                <label class="form-check form-switch form-check-custom form-check-solid">
+                    <input class="form-check-input" type="checkbox" @bind="@(Product.Stockable)">
+                </label>
+                <div class="text-muted fs-7 mt-3">@(Product.Stockable ? "Habilitado" : "Desabilitado")</div>
+            </div>
+            @if (Product.Stockable)
+            {
+                <div class="mb-0 mt-5 fv-row fv-plugins-icon-container">
+                    <label class="form-label">Quantidade</label>
+                    <input type="number" name="stockValue" onclick="this.select();" min="0" class="form-control form-control-solid mb-2" placeholder="0" autocomplete="off" @bind="@(Product.AvailableStock)"/>
+                    <div class="text-muted fs-7">Coloque a quantidade disponível em estoque</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public ProductModel Product { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+    }
+}

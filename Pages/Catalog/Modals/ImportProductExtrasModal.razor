@@ -1,0 +1,99 @@
+﻿@inject IJSRuntime JsRuntime
+@inject DataRequest DataRequest
+
+<div class="modal fade" id="select_product_extra_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-850px">
+        <div class="modal-content rounded">
+             <div class="modal-header pb-0 border-0 justify-content-end">
+                            <div class="btn btn-sm btn-icon btn-active-color-success" data-bs-dismiss="modal">
+                                <i class="ki-outline ki-cross fs-1"></i>
+                            </div>
+                        </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="form">
+                    <div class="table-responsive mb-10">
+                        <table class="table align-middle table-row-dashed fs-6 gy-3 dataTable no-footer" id="kt_table_widget_4_table">
+                            <thead>
+                            <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                <th class="text-start min-w-80px"></th>
+                                <th class="text-start min-w-100px">Complemento</th>
+                                <th class="text-center min-w-100px">Obrigatório</th>
+                                <th class="text-center min-w-100px">Qtde. Min</th>
+                                <th class="text-center min-w-100px">Qtde. Max</th>
+                                <th class="text-center"></th>
+                            </tr>
+                            </thead>
+                            <tbody class="fw-bold text-gray-600">
+                            @foreach (ProductExtraModel extra in Items)
+                            {
+                                <tr class="odd">
+                                    <td class="text-start">
+                                        <label class="form-check form-check-custom">
+                                            <input class="form-check-input" type="checkbox" @bind="@(extra.IsSelected)">
+                                        </label>
+                                    </td>
+                                    <td class="text-start">
+                                        @(extra.Name)
+                                    </td>
+                                    <td class="text-center">
+                                        @(extra.IsRequired ? "Sim" : "Nao")
+                                    </td>
+                                    <td class="text-center">
+                                        @(extra.Min)
+                                    </td>
+                                    <td class="text-center">
+                                        @(extra.Max)
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-icon btn-light-success h-25px w-25px" @onclick="() => extra.ShowDetail = !extra.ShowDetail">
+                                            <i class="ki-outline fs-4 m-0 @(extra.ShowDetail ? "ki-minus" : "ki-plus")"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                @if (extra.ShowDetail)
+                                {
+                                    foreach (ProductExtraItemModel item in extra.Items)
+                                    {
+                                        <_ProductExtraItemTable ExtraItem="item"/>
+                                    }
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-light me-3" @onclick="async () => await CloseAsync()">Fechar</button>
+                        @if (Items.Count > 0)
+                        {
+                            <button type="button" class="btn btn-success" @onclick="async () => await AddExtraItemsAsync()">
+                                <span class="indicator-label">Adicionar complemento</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public EventCallback<List<ProductExtraModel>> OnSave { get; set; }
+
+    [Parameter]
+    public List<ProductExtraModel> Items { get; set; }
+
+    async Task AddExtraItemsAsync()
+    {
+        await CloseAsync();
+        List<ProductExtraModel> selectList = Items.Where(x => x.IsSelected).ToList();
+        if (selectList.Count == 0)
+            return;
+
+        await OnSave.InvokeAsync(selectList);
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "select_product_extra_modal");
+}

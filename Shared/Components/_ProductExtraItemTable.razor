@@ -1,0 +1,49 @@
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<tr class="">
+    <td colspan="2">
+        <div class="d-flex align-items-center gap-3">
+            <a class="symbol symbol-50px bg-secondary bg-opacity-25 rounded">
+                <img src="@(ExtraItem.GetImageUrl())" alt="@(ExtraItem.Name)">
+            </a>
+            <div class="d-flex flex-column text-muted">
+                <span class="text-gray-800 text-hover-primary fw-bold">@(ExtraItem.Name)</span>
+                <div class="fs-7">@(ExtraItem.Description)</div>
+            </div>
+        </div>
+    </td>
+    <td class="text-center">
+        @(CurrencyUtils.MoneyFormat(ExtraItem.UnitPrice))
+    </td>
+    <td class="text-end">
+        <div class="text-muted fs-7 fw-bold">
+            <div class="badge badge-light-@(ExtraItem.Status == 1 ? "success" : "warning") cursor-pointer" @onclick="async () => await UpdateStatusAsync(ExtraItem.Status == 1? 9 : 1)" title="@(ExtraItem.Status == 1 ? "Pausar" : "Continuar") as vendas deste item do complemento">@(ExtraItem.Status == 1 ? "Pausar" : "Continuar") venda</div>
+        </div>
+    </td>
+</tr>
+
+@code
+{
+    [Parameter]
+    public ProductExtraItemModel ExtraItem { get; set; }
+
+    private bool _loading;
+    
+    async Task UpdateStatusAsync(int newStatus)
+    {
+        ExtraItem.Status = newStatus;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/productextraitem", ExtraItem);
+        _loading = false;
+
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Warning", response.Error);
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Success", "Status do item salvo com sucesso.");
+        
+        StateHasChanged();
+    }
+}

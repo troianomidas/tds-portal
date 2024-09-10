@@ -1,0 +1,72 @@
+﻿@using System.Runtime.InteropServices
+@* @inject IStorageService StorageBlob *@
+
+<div class="image-input image-input-empty image-input-outline image-input-placeholder mb-0 me-0" style="background-size: cover; background-position: center;">
+    @if (string.IsNullOrEmpty(Thumbnail))
+    {
+        <div class="image-input-wrapper size">
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Thumbnail))
+    {
+        <div class="image-input-wrapper size" style="background-image: url(@(Thumbnail)">
+        </div>
+    }
+    <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip">
+        <i class="bi bi-pencil-fill fs-7"></i>
+        <InputFile OnChange="async (e) => await FileChangeAsync(e)" accept=".png, .jpg, .jpeg"/>
+        <input type="hidden" name="avatar_remove"/>
+    </label>
+    @if (!string.IsNullOrEmpty(Thumbnail))
+    {
+        <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow thumbnail-remove" data-bs-toggle="tooltip" @onclick="async () => await FileRemovedAsync()">
+            <i class="bi bi-x fs-2"></i>
+        </span>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public string? Thumbnail { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnUploaded { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnRemove { get; set; }
+
+    private string? _imageId;
+
+    async Task FileChangeAsync(InputFileChangeEventArgs e)
+    {
+        if (e.GetMultipleFiles(1).Count < 1)
+            return;
+
+        IBrowserFile file = e.GetMultipleFiles(1).First();
+
+        IBrowserFile browserFile = await file.RequestImageFileAsync(file.ContentType, 300, 275);
+
+        var buf = new byte[file.Size];
+
+        await using Stream stream = browserFile.OpenReadStream();
+        _ = await stream.ReadAsync(buf);
+        
+        Thumbnail = "data:image/png;base64," + Convert.ToBase64String(buf);
+        StateHasChanged();
+
+        _imageId = Guid.NewGuid().ToString();
+        // string? imageUrl = await StorageBlob.UploadFileAsync($"{_imageId}.jpg", browserFile.OpenReadStream());
+        
+        // await OnUploaded.InvokeAsync(imageUrl);
+        
+        await OnUploaded.InvokeAsync(string.Empty);
+
+    }
+
+    async Task FileRemovedAsync()
+    {
+        Thumbnail = null;
+        await OnRemove.InvokeAsync(_imageId);
+    }
+}

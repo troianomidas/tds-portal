@@ -1,0 +1,166 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inherits LayoutComponentBase
+@* @implements IDisposable *@
+
+@inject IJSRuntime JsRuntime
+@inject DataRequest DataRequest
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Portal Quantso | Cardápio Online</PageTitle>
+
+<div class="d-flex flex-column flex-root app-root" id="kt_app_root">
+    <div class="app-page flex-column flex-column-fluid" id="kt_app_page">
+        <AuthorizeView>
+            <Authorized>
+                <Header Username="@_username" StoreName="@(_storeName)" Avatar="@(_avatar)" Store="@(Store)"> </Header>
+                <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
+                    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+                        @if (_storeActive)
+                        {
+                            <_WorkflowOrders Orders="@(_workflowOrders)" OnUpdated="async b => await WorkflowOrdersCallbackAsync()"/>
+                        }
+                        <CascadingValue Value="@(this)">
+                            @Body
+                        </CascadingValue>
+                    </div>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                @Body
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@code
+{
+    public StoreModel? Store;
+    private List<OrderModel>? _workflowOrders;
+    private string? _username;
+    private string? _storeName;
+    private string? _avatar;
+    private bool _storeActive;
+
+    // private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _username = authState.User.FindFirstValue(ClaimTypes.Email);
+        _storeName = authState.User.FindFirstValue(ClaimTypes.Surname);
+        _avatar = authState.User.FindFirstValue(ClaimTypes.Actor);
+        _storeActive = authState.User.IsInRole(Roles.SubscriptionActive);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("Delivery3Theme.Init");
+
+        if (firstRender)
+        {
+    // if is NOT authenticated, returns to avoid loop in signin
+            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (!authState.User.Identity?.IsAuthenticated ?? false)
+                return;
+
+            if (!_storeActive)
+            {
+                await LoadStoreAsync();
+                return;
+            }
+
+            try
+            {
+                await LoadStoreAsync();
+                await LoadWorkflowOrdersAsync();
+                // await StartHubAsync();
+
+                await JsRuntime.InvokeVoidAsync("GLOBAL.SetMainDotnetReference", DotNetObjectReference.Create(this));
+                await JsRuntime.InvokeVoidAsync("Audio.Init");
+            }
+            catch (Exception e)
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Error", e.Message + " " + e.InnerException?.Message);
+            }
+            finally
+            {
+                StateHasChanged();
+            }
+        }
+    }
+
+    async Task LoadStoreAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/Store/Get");
+        if (response.IsSuccessRequest)
+            Store = JsonConvert.DeserializeObject<StoreModel?>(response.Json ?? string.Empty);
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StateHasChanged();
+    }
+
+    async Task LoadWorkflowOrdersAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/order/workflow");
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        _workflowOrders = JsonConvert.DeserializeObject<List<OrderModel>>(response.Json ?? string.Empty);
+        StateHasChanged();
+    }
+
+    // async Task StartHubAsync()
+    // {
+    //     if (Store == null)
+    //         return;
+    //
+    //     _hubConnection = new HubConnectionBuilder()
+    //         .WithUrl(SignalRConst.Url)
+    //         .Build();
+    //
+    //     _hubConnection.On<HubSignalMessage>($"rewrite_session_{Store.Id}", async item =>
+    //     {
+    //         await JsRuntime.InvokeVoidAsync("Toastr.Success", "Assinatura ativada com sucesso.");
+    //         NavigationManager.NavigateTo("/web/auth/rewrite", true);
+    //     });
+    //
+    //     _hubConnection.On<HubSignalMessage>($"RefreshWorkflowOrder_{Store.Id}", async item =>
+    //     {
+    //         await JsRuntime.InvokeVoidAsync("Toastr.Info", "Novo pedido recebido.");
+    //         await JsRuntime.InvokeVoidAsync("Callback.WorkflowOrder", Store.Id.ToString());
+    //     });
+    //
+    //     await _hubConnection.StartAsync();
+    // }
+
+    public async Task OnRefreshOrderAsync()
+    {
+        await LoadWorkflowOrdersAsync();
+    }
+
+    async Task WorkflowOrdersCallbackAsync()
+    {
+        StateHasChanged();
+        await JsRuntime.InvokeVoidAsync("Audio.Stop");
+    }
+
+    [JSInvokable("RefreshOrder")]
+    public async Task RefreshOrder(JsGlobalInvokeModel invokeModel)
+    {
+        await OnRefreshOrderAsync();
+        await JsRuntime.InvokeVoidAsync("Audio.Play");
+    }
+
+    // public void Dispose() => _hubConnection?.DisposeAsync().GetAwaiter();
+    // public void Dispose()
+    // {
+    //     throw new NotImplementedException();
+    // }
+}
