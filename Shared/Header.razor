@@ -1,0 +1,352 @@
+﻿@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+
+<div id="kt_app_header" class="app-header">
+<div class="app-container container-fluid d-flex align-items-stretch justify-content-between" id="kt_app_header_container">
+<div class="app-header-logo d-flex align-items-center ps-lg-2 me-lg-10">
+    <div class="btn btn-icon btn-color-gray-500 btn-active-color-primary w-35px h-35px ms-n2 me-2 d-flex d-lg-none" id="kt_app_sidebar_mobile_toggle">
+        <i class="ki-outline ki-abstract-14 fs-1"></i>
+    </div>
+    <a href="/">
+        <img alt="Logo" src="/quantso.png" class="h-30px h-lg-35px"/>
+    </a>
+</div>
+<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1">
+<div class="d-flex align-items-stretch" id="kt_app_header_menu_wrapper">
+    <div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true" data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_header_menu_toggle" data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_menu_wrapper'}">
+        <div class="menu menu-rounded menu-column menu-lg-row menu-active-bg menu-title-gray-600 menu-state-dark menu-arrow-gray-400 fw-semibold fw-semibold fs-6 align-items-stretch my-5 my-lg-0 px-2 px-lg-0" id="#kt_app_header_menu" data-kt-menu="true">
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                <span class="menu-link">
+                    <span class="menu-title">Vendas</span>
+                    <span class="menu-arrow"></span>
+                </span>
+                <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
+                    <div class="menu-item">
+                        <a class="menu-link" href="/orders" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-title">Pedidos</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                <span class="menu-link">
+                    <span class="menu-title">Cadastros</span>
+                    <span class="menu-arrow"></span>
+                </span>
+                <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
+                    <div class="menu-item">
+                        <a class="menu-link" href="/catalogs" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-title">Cardápio</span>
+                        </a>
+                    </div>
+                    @* <div class="menu-item"> *@
+                    @*     <a class="menu-link" href="/customers" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right"> *@
+                    @*         <span class="menu-title">Cupons de desconto</span> *@
+                    @*     </a> *@
+                    @* </div> *@
+                    <div class="menu-item">
+                        <a class="menu-link" href="/collaborators" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-title">Entregadores</span>
+                        </a>
+                    </div>
+                    @* <div class="menu-item"> *@
+                    @*     <a class="menu-link" href="/collaborators" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right"> *@
+                    @*         <span class="menu-title">Fornecedores</span> *@
+                    @*     </a> *@
+                    @* </div> *@
+                </div>
+            </div>
+
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                <span class="menu-link">
+                    <span class="menu-title">Indicadores</span>
+                    <span class="menu-arrow"></span>
+                </span>
+                <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
+                    <div class="menu-item">
+                        <a class="menu-link" href="/financial">
+                            <span class="menu-title">Clientes</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="/financial">
+                            <span class="menu-title">Produtos</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="/financial">
+                            <span class="menu-title">Financeiro</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                <span class="menu-link">
+                    <span class="menu-title">Minha loja</span>
+                    <span class="menu-arrow"></span>
+                </span>
+                <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
+                    <div class="menu-item">
+                        <a class="menu-link" href="/store">
+                            <span class="menu-title">Minha loja</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="/delivery">
+                            <span class="menu-title">Delivery</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="/opening-hour">
+                            <span class="menu-title">Horários</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="/payment-method">
+                            <span class="menu-title">Formas de pagamento</span>
+                        </a>
+                    </div>
+                    @* <div class="menu-item"> *@
+                    @*     <a class="menu-link" href="/store/printer"> *@
+                    @*         <span class="menu-title">Impressora</span> *@
+                    @*     </a> *@
+                    @* </div> *@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="app-navbar flex-shrink-0">
+    <div class="app-navbar-item align-items-stretch me-0 me-lg-3">
+        @* <div class="app-navbar-item ms-3 ms-md-6"> *@
+        @*     <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-success w-30px h-30px w-md-35px h-md-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end"> *@
+        @*         <i class="ki-outline ki-shop fs-1"></i> *@
+        @*     </div> *@
+        @*     <div class="menu menu-sub menu-sub-dropdown menu-column w-100 w-sm-350px" data-kt-menu="true" style=""> *@
+        @*         <div class="card"> *@
+        @*             <div class="card-header"> *@
+        @*                 <div class="card-title">Cardapio Digital</div> *@
+        @*                 <div class="card-toolbar"> *@
+        @*                     <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n3" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-end"> *@
+        @*                         <i class="ki-outline ki-setting-3 fs-2"></i> *@
+        @*                     </button> *@
+        @*                 </div> *@
+        @*             </div> *@
+        @* *@
+        @*             <div class="card-body py-5"> *@
+        @*                 <div class="mh-450px scroll-y me-n5 pe-5"> *@
+        @*                   //bpody *@
+        @*                      *@
+        @*                 </div> *@
+        @*             </div> *@
+        @*         </div> *@
+        @*     </div> *@
+        @* </div> *@
+        <div class="app-navbar-item ms-3 ms-md-6">
+            <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-success w-30px h-30px w-md-35px h-md-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                <i class="ki-outline ki-shop fs-1"></i>
+            </div>
+            <div class="menu menu-sub menu-sub-dropdown menu-column w-250px w-lg-325px" data-kt-menu="true" style="">
+                <div class="d-flex flex-column flex-center bgi-no-repeat rounded-top px-9 py-10 bg-success">
+                    <h3 class="text-white fw-semibold mb-3">
+                        Cardápio digital
+                    </h3>
+                    <span class="badge bg-light-success text-gray-800 py-4 px-4">quantso.delivery/damanadesnalanches123</span>
+                </div>
+                <div class="row g-0">
+                    <div class="col-6">
+                        <a href="/store/printer" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-bottom">
+                            <i class="ki-outline ki-printer fs-3x text-sucess mb-2"></i> <span class="fs-5 fw-semibold text-gray-800 mb-0">Impressora</span>
+                            @if (_isPrinterConnected == null)
+                            {
+                                <span class="fs-7">Carregando...</span>
+                            }
+                            else if (_isPrinterConnected == true)
+                            {
+                                <span class="fs-7 text-success">Conectada</span>
+                            }
+                            else
+                            {
+                                <span class="fs-7 text-danger">Desconectada</span>
+                            }
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/metronic8/demo31/apps/projects/settings.html" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom">
+                            <i class="ki-outline ki-check-circle fs-3x text-sucess mb-2"></i> <span class="fs-5 fw-semibold text-success mb-0">Loja aberta</span>
+                            <span class="fs-7 text-gray-500">Fechar agora</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/metronic8/demo31/apps/projects/list.html" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end">
+                            <i class="ki-outline ki-delivery-time fs-3x text-sucess mb-2"></i> <span class="fs-5 fw-semibold text-gray-800 mb-0">Entrega</span>
+                            <span class="fs-7 text-gray-500">40 - 60 min</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/metronic8/demo31/apps/projects/users.html" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light">
+                            <i class="ki-outline ki-delivery-3 fs-3x text-sucess mb-2"></i> <span class="fs-5 fw-semibold text-gray-800 mb-0">Balcão</span>
+                            <span class="fs-7 text-gray-500">15 - 30 min</span>
+                        </a>
+                    </div>
+                    <!--end:Item-->
+                </div>
+                <!--end:Nav-->
+
+                <!--begin::View more-->
+                <div class="py-2 text-center border-top">
+                    <a href="/" target="_blank" class="btn btn-color-gray-600 btn-active-color-success">
+                        Acessar link
+                        <i class="ki-outline ki-arrow-right fs-5"></i>
+                    </a>
+                </div>
+                <!--end::View more-->
+            </div>
+            <!--end::Menu-->
+            <!--end::Menu wrapper-->
+        </div>
+        @* <div class="app-navbar-item ms-3 ms-md-6"> *@
+        @*     <_Announcements/> *@
+        @* </div> *@
+
+        <div class="app-navbar-item ms-5">
+            @* <a href="/online-menu" class="btn btn-sm btn-flex btn-light-success align-self-center ms-3 ms-3 px-3"> *@
+            @*     Loja Aberta <i class="ki-outline ki-shop fs-3 me-1"></i> *@
+            @* </a> *@
+            <div class="app-navbar-item ms-5" id="kt_header_user_menu_toggle">
+                <div class="bg-light-dark rounded px-4 py-1 d-flex" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                    <div class="text-end d-none d-sm-flex flex-column justify-content-center me-3">
+                        <span>
+                            @(Username)
+                        </span>
+                        <a class="text-gray-800 text-hover-primary fs-7 fw-bold d-block">@(StoreName)</a>
+                    </div>
+                    <div class="cursor-pointer symbol symbol-30px symbol-md-35px" style="margin-top: 0.2rem">
+                        <img class="symbol symbol-circle symbol-30px symbol-md-35px" src="@(Avatar)" alt="@(Username)"/>
+                    </div>
+                </div>
+
+                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px" data-kt-menu="true">
+                    <div class="menu-item px-3">
+                        <div class="menu-content d-flex align-items-center px-3">
+                            <div class="symbol symbol-circle symbol-40px me-5">
+                                <img alt="@(Username)" src="@(Avatar)"/>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div class="fw-bold d-flex align-items-center fs-5">@(Username) </div>
+                                <div class="d-flex flex-stack mt-1">
+                                    <a href="https://quantso.app/@(Store?.Hostname)" target="_blank" class="text-success opacity-75-hover fs-6 fw-semibold">@(StoreName)</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="separator my-2"></div>
+                    <div class="menu-item px-5">
+                        <a href="/store" class="menu-link px-5 text-hover-success">Minha loja</a>
+                    </div>
+                    <div class="menu-item px-5">
+                        <a href="/subscription" class="menu-link px-5 text-hover-success">Assinatura</a>
+                    </div>
+                    <div class="menu-item px-5">
+                        <a href="/support" class="menu-link px-5 text-hover-success">Suporte</a>
+                    </div>
+                    <div class="separator my-2"></div>
+
+                    <div class="menu-item px-5">
+                        <a href="/web/auth/logout" class="menu-link px-5 text-hover-danger">Sair</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+@code
+{
+    [Parameter]
+    public StoreModel? Store { get; set; }
+
+    [Parameter]
+    public string? Username { get; set; }
+
+    [Parameter]
+    public string? StoreName { get; set; }
+
+    [Parameter]
+    public string? Avatar { get; set; }
+
+    private bool? _isOpen = null;
+    private bool? _isPrinterConnected = null;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadSettingsAsync();
+            await LoadIsStoreOpenAsync();
+            StateHasChanged();
+        }
+    }
+
+    async Task LoadSettingsAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/store/Settings");
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StoreSettingsModel settings = JsonConvert.DeserializeObject<StoreSettingsModel?>(response.Json ?? string.Empty) ?? new StoreSettingsModel();
+        _isPrinterConnected = settings.IsPrinterConnected;
+
+        StateHasChanged();
+    }
+
+    async Task LoadIsStoreOpenAsync()
+    {
+        _isOpen = null;
+
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/OpeningHour");
+        if (!response.IsSuccessRequest)
+        {
+            _isOpen = false;
+            return;
+        }
+
+        var openingHour = JsonConvert.DeserializeObject<List<OpeningHourModel>>(response.Json ?? string.Empty);
+        if (!openingHour?.Any() ?? false)
+        {
+            _isOpen = false;
+            return;
+        }
+
+        if (openingHour == null)
+        {
+            _isOpen = false;
+            return;
+        }
+
+        foreach (OpeningHourModel hour in openingHour.Where(x => x.DayOfWeek == GetDayOfWeekParsed()))
+        {
+            if (DateTimeUtils.Now() >= hour.DateTimeBegin() && DateTimeUtils.Now() < hour.DateTimeEnd())
+            {
+                _isOpen = true;
+                return;
+            }
+        }
+
+        _isOpen = false;
+    }
+
+    string GetDayOfWeekParsed()
+    {
+        return DateTimeUtils.Now().DayOfWeek.ToString();
+    }
+}

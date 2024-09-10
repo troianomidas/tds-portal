@@ -1,0 +1,79 @@
+﻿@if (Disable)
+{
+    <div class="position-relative" style="width: @(Width)px">
+        <button type="button" class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 start-0" disabled="disabled">
+            <i class="ki-outline ki-minus-square fs-1"></i>
+        </button>
+        <input type="text" class="form-control form-control-solid border-0 ps-12" placeholder="0" readonly @bind="@(Amount)"/>
+        <button type="button" class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 end-0" disabled="disabled">
+            <i class="ki-outline ki-plus-square fs-1"></i>
+        </button>
+    </div> 
+}
+else
+{
+    <div class="position-relative" style="width: @(Width)px">
+        @if (Amount > Min)
+        {
+            <button type="button" class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 start-0" @onclick="async () => await ChangeAmountAsync(-1)">
+                <i class="ki-outline ki-minus-square fs-1"></i>
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-icon btn-color-gray-300 position-absolute translate-middle-y top-50 start-0">
+                <i class="ki-outline ki-minus-square fs-1"></i>
+            </button>
+        }
+        <input type="text" class="form-control form-control-solid border-0 ps-12" placeholder="0" readonly @bind="@(Amount)"/>
+        @if (LimitUsed < Limit)
+        {
+            <button type="button" class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 end-0" @onclick="async () => await ChangeAmountAsync(1)">
+                <i class="ki-outline ki-plus-square fs-1"></i>
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-icon btn-color-gray-300 position-absolute translate-middle-y top-50 end-0" @onclick="async () => await ChangeAmountAsync(1)">
+                <i class="ki-outline ki-plus-square fs-1"></i>
+            </button>
+        }
+    </div> 
+}
+
+@code
+{
+    [Parameter]
+    public int Width { get; set; } = 210;
+    
+    [Parameter]
+    public int Amount { get; set; }
+    
+    [Parameter]
+    public int Min { get; set; }
+    
+    [Parameter]
+    public int Limit { get; set; } = 1000;
+    
+    [Parameter]
+    public int LimitUsed { get; set; } = 1000;
+    
+    [Parameter]
+    public bool Disable { get; set; }
+ 
+    [Parameter]
+    public EventCallback<int> OnChange { get; set; }
+
+    async Task ChangeAmountAsync(int amount)
+    {
+        if (LimitUsed + amount > Limit)
+            return;
+        
+        Amount += amount;
+        
+        if (Amount < Min)
+            Amount = Min;
+
+        await OnChange.InvokeAsync(Amount);
+    }
+}

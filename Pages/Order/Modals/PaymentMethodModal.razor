@@ -1,0 +1,161 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_payment_method_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    <h1 class="mb-3">Formas de pagamento</h1>
+                    <div class="text-muted fw-semibold fs-5">Para exibir mais opções de pagamento, por favor, acesse <a href="/payment-method" target="_blank">Formas de Pagamento</a>.</div>
+                </div>
+                <div class="row col-12">
+                    <ul class="nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0 fw-bold" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a id="kt_payment_store_credit_tab" class="nav-link justify-content-center text-active-gray-800 active" data-bs-toggle="tab" role="tab" href="#kt_payment_store_credit" aria-selected="true">
+                                Crédito
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a id="kt_payment_store_debit_tab" class="nav-link justify-content-center text-active-gray-800" data-bs-toggle="tab" role="tab" href="#kt_payment_store_debit" aria-selected="false" tabindex="-1">
+                                Débito
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a id="kt_payment_store_ticket_tab" class="nav-link justify-content-center text-active-gray-800" data-bs-toggle="tab" role="tab" href="#kt_payment_store_ticket" aria-selected="false" tabindex="-1">
+                                Vale-refeição
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a id="kt_payment_store_etc_tab" class="nav-link justify-content-center text-active-gray-800" data-bs-toggle="tab" role="tab" href="#kt_payment_store_etc" aria-selected="false" tabindex="-1">
+                                Outros
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        @if (PaymentMethods != null)
+                        {
+                            <div id="kt_payment_store_credit" class="tab-pane fade active show" role="tabpanel" aria-labelledby="kt_payment_store_credit_tab">
+                                <div class="py-5">
+                                    @foreach (PaymentMethodModel.PaymentMethodItemModel item in PaymentMethods.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description == "Crédito (Máquina)"))
+                                    {
+                                        <div class="d-flex flex-stack">
+                                            <div class="d-flex">
+                                                <img src="@(item.ImgUrl)" class="w-30px me-6" alt="">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                    <div class="fs-6 fw-semibold text-gray-400">@(item.Description)</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                                <div class="form-check form-check-solid form-check-custom form-switch">
+                                                    <span class="fs-6 fw-semibold text-success cursor-pointer" @onclick="async () => await SaveAsync(item.Id)">Selecionar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="separator separator-dashed my-2"></div>
+                                    }
+                                </div>
+                            </div>
+                            <div id="kt_payment_store_debit" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_payment_store_debit_tab">
+                                <div class="py-5">
+                                    @foreach (PaymentMethodModel.PaymentMethodItemModel item in PaymentMethods.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description == "Débito (Máquina)"))
+                                    {
+                                        <div class="d-flex flex-stack">
+                                            <div class="d-flex">
+                                                <img src="@(item.ImgUrl)" class="w-30px me-6" alt="">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                    <div class="fs-6 fw-semibold text-gray-400">@(item.Description)</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                                <div class="form-check form-check-solid form-check-custom form-switch">
+                                                   <span class="fs-6 fw-semibold text-success cursor-pointer" @onclick="async () => await SaveAsync(item.Id)">Selecionar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="separator separator-dashed my-2"></div>
+                                    }
+                                </div>
+                            </div>
+                            <div id="kt_payment_store_ticket" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_payment_store_ticket_tab">
+                                <div class="py-5">
+                                    @foreach (PaymentMethodModel.PaymentMethodItemModel item in PaymentMethods.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description == "Vale (Máquina)"))
+                                    {
+                                        <div class="d-flex flex-stack">
+                                            <div class="d-flex">
+                                                <img src="@(item.ImgUrl)" class="w-30px me-6" alt="" width="20">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                    <div class="fs-6 fw-semibold text-gray-400">@(item.Description)</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                               <span class="fs-6 fw-semibold text-success cursor-pointer" @onclick="async () => await SaveAsync(item.Id)">Selecionar</span>
+                                            </div>
+                                        </div>
+                                        <div class="separator separator-dashed my-2"></div>
+                                    }
+                                </div>
+                            </div>
+                            <div id="kt_payment_store_etc" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_payment_store_etc_tab">
+                                <div class="py-5">
+                                    @foreach (PaymentMethodModel.PaymentMethodItemModel item in PaymentMethods.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description == "Outros"))
+                                    {
+                                        <div class="d-flex flex-stack">
+                                            <div class="d-flex">
+                                                <img src="@(item.ImgUrl)" class="w-30px h-30px me-6" alt="">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                    <div class="fs-6 fw-semibold text-gray-400">@(item.Description)</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                                <div class="form-check form-check-solid form-check-custom form-switch">
+                                                   <span class="fs-6 fw-semibold text-success cursor-pointer" @onclick="async () => await SaveAsync(item.Id)">Selecionar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="separator separator-dashed my-2"></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public PaymentMethodModel? PaymentMethods { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> OnSaved { get; set; }
+
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+        }
+    }
+
+    async Task SaveAsync(int paymentMethodId)
+    {
+        await OnSaved.InvokeAsync(paymentMethodId);
+        await CloseAsync();
+    }
+    
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_payment_method_modal");
+}

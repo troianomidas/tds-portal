@@ -1,0 +1,72 @@
+﻿@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+
+<div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-30px h-30px w-md-35px h-md-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+    <i class="ki-outline ki-notification-on fs-1"></i>
+    @if (_announcements != null)
+    {
+        <div class="badge badge-circle badge-danger position-absolute translate-middle bottom-0 ms-10 mt-10 h-15px w-15px fs-9">@(_announcements.Count)</div>
+    }
+</div>
+<div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px" data-kt-menu="true" id="kt_menu_notifications" style="">
+    <div class="tab-content">
+        <div class="tab-pane fade show active" role="tabpanel">
+            <div class="scroll-y mh-325px my-5 px-8">
+                @if (_announcements != null)
+                {
+                    foreach (Announcement item in _announcements)
+                    {
+                        <div class="d-flex flex-stack">
+                            <div class="d-flex align-items-center">
+                                <div class="mb-0 me-2">
+                                    @if (item.Status == 1)
+                                    {
+                                        <a href="/announcement/@(item.Id)" class="fs-6 text-gray-800 text-hover-primary fw-bolder">@(item.Title)</a>
+                                    }
+                                    else
+                                    {
+                                        <a href="/announcement/@(item.Id)" class="fs-6 text-gray-800 text-hover-primary">@(item.Title)</a>
+                                    }
+                                    <div class="text-gray-500 fs-7">@(item.Description?.Replace("<br>", "")[..90])...</div>
+                                </div>
+                            </div>
+                            <span class="badge badge-light fs-8">@(DateTimeUtils.GetFormattedDiffTime(item.CreatedAt))</span>
+                        </div>
+                    }
+                }
+
+            </div>
+            <div class="py-3 text-center border-top">
+                <a href="#" class="btn btn-color-gray-600 btn-active-color-primary">
+                    Ver todos
+                    <i class="ki-outline ki-arrow-right fs-5"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private int _storeId;
+    private List<Announcement>? _announcements;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadAnnouncementsAsync();
+    }
+
+    async Task LoadAnnouncementsAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/announcement");
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        _announcements = JsonConvert.DeserializeObject<List<Announcement>>(response.Json ?? string.Empty);
+        StateHasChanged();
+    }
+}

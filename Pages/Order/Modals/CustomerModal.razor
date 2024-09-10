@@ -1,0 +1,260 @@
+﻿@using WebApp.Models.Customers
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_customer_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    @if (DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                    {
+                        <h1 class="mb-3">Mesa</h1>
+                        <div class="text-muted fw-semibold fs-5">Definir a mesa em que o cliente se encontra para anotar o pedido</div>
+                    }
+                    else
+                    {
+                        <h1 class="mb-3">Cliente</h1>
+                        <div class="text-muted fw-semibold fs-5">Você tem a opção de escolher um já existente ou cadastrar um novo</div>
+                    }
+                </div>
+
+                @if (DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                {
+                    <div class="row col-12">
+                        <div class="form-floating mb-10">
+                            <input name="customer_table" class="form-control form-control-solid" placeholder="Mesa" autocomplete="off" maxlength="25" @bind="@(_table)" @onkeyup="async (e) => await EnterKeyPressAsync(e.Key)">
+                            @if (_errorField == "table")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">Mesa</label>
+                        </div>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="row col-12">
+                        <div class="col-6">
+                            <div class="form-floating mb-10">
+                                <input name="customer_name" class="form-control form-control-solid text-uppercase" placeholder="Nome completo" autocomplete="off" @oninput="async (e) => await ListCustomerByNameAsync(e.Value?.ToString())">
+                                @if (_errorField == "name")
+                                {
+                                    <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                                }
+                                <label class="form-label required">Nome completo</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating mb-10">
+                                <input name="customer_phone" class="form-control form-control-solid phone" placeholder="Celular" autocomplete="off" @oninput="async (e) => await ListCustomerByPhoneAsync(e.Value?.ToString())">
+                                @if (_errorField == "phone")
+                                {
+                                    <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                                }
+                                <label class="form-label required">Celular</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row col-12">
+                        <div class="col-6">
+                            <div class="form-floating mb-10">
+                                <input name="customer_document" class="form-control form-control-solid document" placeholder="CPF ou CNPJ">
+                                <label class="form-label">CPF ou CNPJ</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating mb-10">
+                                <input name="customer_email" class="form-control form-control-solid" placeholder="E-mail">
+                                <label class="form-label">E-mail</label>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div class="mb-5">
+                        @if (_customers?.Count > 0)
+                        {
+                            <div class="mh-300px scroll-y me-n7 pe-7">
+                                @foreach (CustomerModel customer in _customers)
+                                {
+                                    <div class="d-flex flex-stack py-4 border-bottom border-gray-300 border-bottom-dashed">
+                                        <div class="d-flex align-items-center">
+                                            <div class="symbol symbol-35px symbol-circle">
+                                                <img alt="Pic" src="/assets/media/avatars/blank.png">
+                                            </div>
+                                            <div class="ms-5">
+                                                <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">@(customer.Name)</a>
+                                                <div class="fw-semibold text-muted">@(CustomerUtils.GetPhone(customer.Phone))</div>
+                                            </div>
+                                        </div>
+                                        <div class="ms-2 w-100px">
+                                            <span class="fw-bold text-success cursor-pointer" @onclick="async () => await CustomerSelectedAsync(customer.Id)">Selecionar</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3">
+                        Fechar
+                    </button>
+                    @if (_loading)
+                    {
+                        <_LoadingButton Class="btn-success"/>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Confirmar</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int DeliveryTypeId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnTableConfirmed { get; set; }
+
+    [Parameter]
+    public EventCallback<CustomerModel?> OnCustomerConfirmed { get; set; }
+
+    private string? _table;
+    private string? _name;
+    private string? _phone;
+    private string? _document;
+    private string? _email;
+
+    private List<CustomerModel>? _customers;
+
+    private string? _errorMsg;
+    private string? _errorField;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("InputMask.Phone");
+        await JsRuntime.InvokeVoidAsync("InputMask.Document");
+    }
+
+    async Task EnterKeyPressAsync(string keyPress)
+    {
+        if (keyPress == "Enter")
+            await SaveAsync();
+    }
+
+    async Task SaveAsync()
+    {
+        _errorMsg = null;
+        _errorField = null;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        _loading = false;
+
+        if (DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+        {
+            if (string.IsNullOrEmpty(_table))
+            {
+                _errorMsg = "Esse campo é obrigatório.";
+                _errorField = "table";
+                return;
+            }
+
+            await OnTableConfirmed.InvokeAsync(_table);
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(_name))
+            {
+                _errorMsg = "Esse campo é obrigatório.";
+                _errorField = "name";
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_phone))
+            {
+                _errorMsg = "Esse campo é obrigatório.";
+                _errorField = "phone";
+                return;
+            }
+            
+            await OnCustomerConfirmed.InvokeAsync(new CustomerModel
+            {
+                TypeId = 1,
+                Name = _name.ToUpper(),
+                Phone = CustomerUtils.GetPhone(_phone),
+                Email = _email,
+                Document = CustomerUtils.GetDocument(_document)
+            });
+        }
+
+        await CloseAsync();
+    }
+
+    async Task CustomerSelectedAsync(int customerId)
+    {
+        CustomerModel? customerSelected = _customers?.FirstOrDefault(x => x.Id == customerId);
+        if (customerSelected == null)
+        {
+    //TODO: add msg customer not found
+            return;
+        }
+
+        await OnCustomerConfirmed.InvokeAsync(customerSelected);
+        await CloseAsync();
+    }
+
+    async Task ListCustomerByNameAsync(string? name)
+    {
+        _name = name;
+
+        if (string.IsNullOrEmpty(_name))
+            return;
+
+        if (_name.Split().Length > 1)
+        {
+            _loading = true;
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, $"/Customer?name={_name}");
+            _loading = false;
+            if (response.IsSuccessRequest)
+                _customers = JsonConvert.DeserializeObject<List<CustomerModel>?>(response.Json ?? string.Empty) ?? new List<CustomerModel>();
+
+            StateHasChanged();
+        }
+    }
+
+    async Task ListCustomerByPhoneAsync(string? phone)
+    {
+        _phone = phone;
+
+        if (string.IsNullOrEmpty(_phone))
+            return;
+
+        if (_phone.Length > 13)
+        {
+            _loading = true;
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, $"/Customer?phone={CustomerUtils.GetPhone(_phone)}");
+            _loading = false;
+            if (response.IsSuccessRequest)
+                _customers = JsonConvert.DeserializeObject<List<CustomerModel>?>(response.Json ?? string.Empty) ?? new List<CustomerModel>();
+
+            StateHasChanged();
+        }
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_customer_modal");
+}

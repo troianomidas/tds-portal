@@ -1,0 +1,10 @@
+﻿input.flatpickr {
+    font-size: 1.4rem;
+    border: none; 
+    outline-style: none; 
+    line-height: 0;
+}
+
+span.ki-outline{
+    font-size: 1.6rem;
+}

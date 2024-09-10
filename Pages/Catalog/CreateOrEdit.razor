@@ -1,0 +1,209 @@
+﻿@page "/catalog/create/{CategoryId:int}"
+@page "/catalog/edit/{Id:int}"
+
+@using WebApp.Models.Collaborators
+@using WebApp.Constants
+
+@attribute [Authorize(Policy = Policies.SubscriptionActive)]
+
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+
+<div class="d-flex flex-column flex-column-fluid">
+   
+    <div class="app-content flex-column-fluid">
+        <div class="app-container container-xxl">
+            @if (_product != null)
+            {
+                <div class="form d-flex flex-column flex-lg-row mb-10">
+                    <div class="d-flex flex-column gap-7 w-100 w-lg-300px mb-7 me-lg-10 d-none">
+                        <div class="card card-flush py-4">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Imagem do item</h2>
+                                </div>
+                            </div>
+                            <div class="card-body text-center pt-0">
+                                <_InputImage Thumbnail="@(_product?.ImageUrl)" OnUploaded="imageUrl => _product!.ImageUrl = imageUrl" OnRemove="s => _product!.ImageUrl = null"/>
+                                <div class="text-muted fs-7">Somente arquivos de imagem *.png, *.jpg e *.jpeg são aceitos.</div>
+                            </div>
+                            <div class="card-header">
+                                <div class="card-title required">
+                                    <h2>Categoria</h2>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <select class="form-select form-select-solid mb-2" @bind="@(_product!.CategoryId)">
+                                    @if (_categories != null)
+                                    {
+                                        @foreach (CategoryModel item in _categories)
+                                        {
+                                            <option value="@(item.Id)">@(item.Name)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column flex-row-fluid gap-6 gap-lg-6">
+                        <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-bold mb-n2" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link text-active-success pb-4 active" data-bs-toggle="tab" href="#general" aria-selected="true" role="tab">Dados gerais</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link text-active-success pb-4" data-bs-toggle="tab" href="#pricing" aria-selected="false" tabindex="-1" role="tab">Preço e Estoque</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link text-active-success pb-4" data-bs-toggle="tab" href="#extra" aria-selected="false" tabindex="-1" role="tab">Complementos</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="general">
+                                <Geral Product="@(_product)" Categories="@(_categories)" Collaborators="@(_collaborators)"/>
+                            </div>
+                            <div class="tab-pane fade" id="pricing">
+                                <PriceStock Product="@(_product)"/>
+                            </div>
+                            <div class="tab-pane fade" id="extra">
+                                <ProductExtra ProductExtraMatches="@(_product.ProductExtraMatches)" ProductHasExtras="_product.HasExtra" OnSave="ExtraHasChange"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p>Caregando...</p>
+            }
+
+            <div class="text-end pt-2 pb-6">
+                @if (_loading)
+                {
+                    <_LoadingButton Class="btn-sm btn-success" Text="Salvando..."/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+                }
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public int CategoryId { get; set; }
+
+    private ProductModel? _product;
+    private List<CategoryModel>? _categories;
+    private List<CollaboratorModal>? _collaborators;
+
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadCategoriesAsync();
+            await LoadCollaboratorsAsync();
+
+            if (Id > 0)
+            {
+                ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, $"/catalog/{Id}");
+                if (!response.IsSuccessRequest)
+                {
+                    await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+                    NavigationManager.NavigateTo("/catalogs", true);
+                    return;
+                }
+
+                _product = JsonConvert.DeserializeObject<ProductModel>(response.Json ?? string.Empty);
+            }
+            else
+            {
+                if (_categories.All(x => x.Id != CategoryId))
+                {
+                    NavigationManager.NavigateTo("/catalogs", true);
+                    return;
+                }
+
+                _product = new ProductModel
+                {
+                    CategoryId = CategoryId
+                };
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    async Task LoadCategoriesAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/category");
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        _categories = JsonConvert.DeserializeObject<List<CategoryModel>>(response.Json ?? string.Empty);
+        if (_categories == null || !_categories.Any())
+        {
+            NavigationManager.NavigateTo("/catalogs", true);
+            return;
+        }
+        StateHasChanged();
+    }
+
+    async Task LoadCollaboratorsAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/collaborator?status=1&groupName=deliveryman");
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        _collaborators = JsonConvert.DeserializeObject<List<CollaboratorModal>>(response.Json ?? string.Empty);
+        StateHasChanged();
+    }
+
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        if (_product == null)
+            return;
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/catalog", _product);
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        else
+        {
+            NavigationManager.NavigateTo("/catalogs");
+
+            await JsRuntime.InvokeVoidAsync("Toastr.Success", "Item salvo com sucesso.");
+        }
+
+        _loading = false;
+    }
+
+    void ExtraHasChange((bool HasExtras, List<ProductExtraMatchModel> Extras) response)
+    {
+        if (_product == null)
+            return;
+
+        _product.HasExtra = response.HasExtras;
+        _product.ProductExtraMatches = response.Extras;
+
+        StateHasChanged();
+    }
+}

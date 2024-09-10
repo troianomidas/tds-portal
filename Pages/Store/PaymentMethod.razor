@@ -1,0 +1,260 @@
+﻿@page "/payment-method"
+@using WebApp.Constants
+
+@attribute [Authorize]
+
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_toolbar" class="app-toolbar mt-8">
+        <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <div class="page-title d-flex flex-column justify-content-center me-3 ">
+                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                    Formas de pagamento
+                </h1>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1">
+                    <li class="breadcrumb-item text-muted">
+                        <a class="text-muted text-hover-success">
+                            Você pode ativar ou desativar as opções de pagamento que sua loja deseja oferecer
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+        <div id="kt_app_content_container" class="app-container container-xxl">
+            @if (_paymentMethod != null)
+            {
+                <div class="card mb-5">
+                    <div class="card-body border-top p-0">
+                        <div class="card">
+                            <div class="card-header card-header-stretch pb-0">
+                                <div class="card-title">
+                                    <h3 class="m-0">Pagamento na entrega</h3>
+                                </div>
+                            </div>
+                            <div class="card-body pt-2">
+                                <div class="tab-content">
+                                    <div id="kt_store_online" class="tab-pane fade active show" role="tabpanel" aria-labelledby="kt_payment_online_tab">
+                                        <ul class="nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0 fw-bold" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <a id="kt_payment_store_credit_tab" class="nav-link justify-content-center text-active-gray-800 active" data-bs-toggle="tab" role="tab" href="#kt_payment_store_credit" aria-selected="true">
+                                                    Cartão
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <a id="kt_payment_store_pix_tab" class="nav-link justify-content-center text-active-gray-800" data-bs-toggle="tab" role="tab" href="#kt_payment_store_pix" aria-selected="false" tabindex="-1">
+                                                    Pix
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <a id="kt_payment_store_etc_tab" class="nav-link justify-content-center text-active-gray-800" data-bs-toggle="tab" role="tab" href="#kt_payment_store_etc" aria-selected="false" tabindex="-1">
+                                                    Dinheiro
+                                                </a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            @if (_paymentMethod.AllPaymentMethods != null)
+                                            {
+                                                <div id="kt_payment_store_credit" class="tab-pane fade active show" role="tabpanel" aria-labelledby="kt_payment_store_credit_tab">
+                                                    <div class="py-5 pb-0">
+                                                        @foreach (PaymentMethodModel.PaymentMethodItemModel item in _paymentMethod.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description.StartsWith("Cartão")))
+                                                        {
+                                                            <div class="d-flex flex-stack">
+                                                                <div class="d-flex">
+                                                                    <i class="ki-duotone ki-credit-cart fs-3x me-6">
+                                                                        <span class="path1"></span>
+                                                                        <span class="path2"></span>
+                                                                    </i>
+                                                                    <div class="d-flex flex-column">
+                                                                        <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Description)</span>
+                                                                        <div class="fs-6 fw-semibold text-gray-400">Mastercard / Visa / Elo / Hipercard</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="d-flex justify-content-end">
+                                                                    <div class="form-check form-check-solid form-check-custom form-switch">
+                                                                        @if (_paymentMethod.PaymentMethods.Any(x => x.PaymentMethodId == item.Id))
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" checked="checked" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        <label class="form-check-label" for="switch_@(item.Id)"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="separator separator-dashed my-4"></div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div id="kt_payment_store_pix" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_payment_store_pix_tab">
+                                                    <div class="py-5 pb-0">
+                                                        @foreach (PaymentMethodModel.PaymentMethodItemModel item in _paymentMethod.AllPaymentMethods.Where(x => x.IsOnline == false && x.Name == "Pix"))
+                                                        {
+                                                            <div class="d-flex flex-stack">
+                                                                <div class="d-flex">
+                                                                    <img src="@(item.ImgUrl)" class="w-35px h-35px me-6" alt="">
+                                                                    <div class="d-flex flex-column">
+                                                                        <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                                        <div class="fs-6 fw-semibold text-gray-400">Transferência instantânea para sua conta</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="d-flex justify-content-end">
+                                                                    <div class="form-check form-check-solid form-check-custom form-switch">
+                                                                        @if (_paymentMethod.PaymentMethods.Any(x => x.PaymentMethodId == item.Id))
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" checked="checked" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        <label class="form-check-label" for="switch_@(item.Id)"></label>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                            <div class="separator separator-dashed my-2"></div>
+
+                                                            if (_paymentMethod.PaymentMethods.Any(x => x.PaymentMethodId == item.Id))
+                                                            {
+                                                                <div class="d-flex flex-column mt-5 mb-0 fv-row">
+                                                                    <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                                                        <span class="required">Chave Pix</span>
+                                                                        <span class="ms-1" data-bs-toggle="tooltip" title="Sua Chave Pix para o cliente transferir o pagamento do pedido.">
+                                                                            <i class="ki-duotone ki-information text-gray-500 fs-7">
+                                                                                <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                                                            </i>
+                                                                        </span>
+                                                                    </label>
+                                                                    <div class="row col-12">
+                                                                        <div class="col-2">
+                                                                            <select class="form-select" @bind="@(_paymentMethod.PaymentMethods.First(x => x.PaymentMethodId == item.Id).Name)">
+                                                                                <option value="CPF/CNPJ">CPF/CNPJ</option>
+                                                                                <option value="Celular">Celular</option>
+                                                                                <option value="E-mail">E-mail</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-10">
+                                                                            <input type="text" class="form-control form-control-solid" placeholder="Valor" @bind="@(_paymentMethod.PaymentMethods.First(x => x.PaymentMethodId == item.Id).Description)"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div id="kt_payment_store_etc" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_payment_store_etc_tab">
+                                                    <div class="py-5 pb-0">
+                                                        @foreach (PaymentMethodModel.PaymentMethodItemModel item in _paymentMethod.AllPaymentMethods.Where(x => x.IsOnline == false && x.Description == "Outros"))
+                                                        {
+                                                            <div class="d-flex flex-stack">
+                                                                <div class="d-flex">
+                                                                    <img src="@(item.ImgUrl)" class="w-35px h-35px me-6" alt="">
+                                                                    <div class="d-flex flex-column">
+                                                                        <span class="fs-5 text-dark text-hover-primary fw-bold">@(item.Name)</span>
+                                                                        <div class="fs-6 fw-semibold text-gray-400">Cédulas e moedas</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="d-flex justify-content-end">
+                                                                    <div class="form-check form-check-solid form-check-custom form-switch">
+                                                                        @if (_paymentMethod.PaymentMethods.Any(x => x.PaymentMethodId == item.Id))
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" checked="checked" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <input class="form-check-input w-45px h-30px" type="checkbox" id="switch_@(item.Id)" @onchange='(e) => ChangePaymentMethod(item.Id, e.Value?.ToString() == "True")'/>
+                                                                        }
+                                                                        <label class="form-check-label" for="switch_@(item.Id)"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="separator separator-dashed my-2"></div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="text-end gap-2 pt-2 pb-6">
+                @if (_loading)
+                {
+                    <_LoadingButton Class="btn-sm btn-success" Text="Salvando..."/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private PaymentMethodModel? _paymentMethod;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/PaymentMethod");
+            if (response.IsSuccessRequest)
+                _paymentMethod = JsonConvert.DeserializeObject<PaymentMethodModel?>(response.Json ?? string.Empty) ?? new PaymentMethodModel();
+            else
+                await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+            StateHasChanged();
+        }
+    }
+
+    async Task LoadPaymentMethodsAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/PaymentMethod");
+        if (response.IsSuccessRequest)
+            _paymentMethod = JsonConvert.DeserializeObject<PaymentMethodModel?>(response.Json ?? string.Empty) ?? new PaymentMethodModel();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StateHasChanged();
+    }
+    
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/PaymentMethod", _paymentMethod);
+        _loading = false;
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Formas de pagamento alterada com sucesso.");
+        NavigationManager.NavigateTo("/payment-method");
+    }
+
+    void ChangePaymentMethod(int paymentMethodId, bool isChecked)
+    {
+        if (_paymentMethod == null)
+            return;
+
+        _paymentMethod.PaymentMethods = _paymentMethod.PaymentMethods.FindAll(x => x.PaymentMethodId != paymentMethodId);
+        if (isChecked)
+            _paymentMethod.PaymentMethods.Add(new PaymentMethodModel.StorePaymentMethodModel
+            {
+                PaymentMethodId = paymentMethodId
+            });
+    }
+}

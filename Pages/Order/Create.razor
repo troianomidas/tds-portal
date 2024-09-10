@@ -1,0 +1,695 @@
+﻿@page "/order/create"
+@page "/order/edit/{Id}"
+
+@using WebApp.Models.Customers
+
+@attribute [Authorize(Policy = Policies.SubscriptionActive)]
+
+@inject DataRequest DataRequest
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<CheckSubscriptionExpired StoreStatus="@(Store?.Status ?? 0)"/>
+
+<div class="d-flex flex-column flex-column-fluid">
+<div id="kt_app_toolbar" class="app-toolbar mt-8">
+    <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+        <div class="page-title d-flex flex-column justify-content-center gap-1 me-3">
+            <h1 class="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
+                Criar pedido
+            </h1>
+            <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0">
+                <li class="breadcrumb-item text-muted">
+                    <a href="/" class="text-muted text-hover-primary">
+                        Delivery3
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span class="bullet bg-gray-500 w-5px h-2px"></span>
+                </li>
+                <li class="breadcrumb-item text-muted">
+                    Pedidos
+                </li>
+                <li class="breadcrumb-item">
+                    <span class="bullet bg-gray-500 w-5px h-2px"></span>
+                </li>
+                <li class="breadcrumb-item text-muted">
+                    Criar pedido
+                </li>
+                <li class="breadcrumb-item">
+                    <span class="bullet bg-gray-500 w-5px h-2px"></span>
+                </li>
+                <li class="breadcrumb-item text-gray-900">
+                    @if (_order != null)
+                    {
+                        <select class="form-select form-select-sm" @bind="@(_order.DeliveryTypeId)">
+                            <option value="3">Balcão</option>
+                            <option value="1">Entrega</option>
+                            <option value="2">Retirada</option>
+                        </select>
+                    }
+                </li>
+            </ul>
+        </div>
+        <div class="d-flex align-items-center">
+            <a href="/orders" class="btn btn-sm fw-bold btn-secondary me-4">Voltar</a>
+            @if (_loading)
+            {
+                <_LoadingButton Class="btn-sm fw-bold btn-success"/>
+            }
+            else
+            {
+                <button type="button" class="btn btn-sm fw-bold btn-success" @onclick="async () => await SaveAsync()">Salvar pedido</button>    
+            }
+        </div>
+    </div>
+</div>
+<div id="kt_app_content" class="app-content flex-column-fluid">
+    <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="card mb-5 pe-0" style="padding: 1.5rem 2rem">
+            @if (_order != null)
+            {
+                <div class="row col-12">
+                    <div class="col-3">
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px symbol-circle me-3">
+                                <span class="symbol-label bg-success">
+                                    <i class="ki-outline ki-calendar-add fs-2x text-white"></i>
+                                </span>
+                            </div>
+                            <div class="text-dark">
+                                @if (_order.DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                                {
+                                    <span class="fw-semibold opacity-75 d-block fs-6">Data da entrega</span>
+                                }
+                                else if (_order.DeliveryTypeId == OrderDeliveryTypeConst.Withdraw)
+                                {
+                                    <span class="required fw-semibold opacity-75 d-block fs-6">Data @(_order.IsScheduled ? "do agendamento" : "da retirada")</span>
+                                }
+                                else
+                                {
+                                    <span class="required fw-semibold opacity-75 d-block fs-6">Data @(_order.IsScheduled ? "do agendamento" : "da entrega")</span>    
+                                }
+                                
+                                @if (_order.DeliveryEstimateBeginAt != DateTime.MinValue)
+                                {
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenDeliveryDateModalAsync()">@(DateTimeUtils.PeriodLayout(_order.DeliveryEstimateBeginAt))</span>
+                                    <br>
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenDeliveryDateModalAsync()">@(_order.DeliveryEstimateBeginAt.ToShortTimeString()) - @(_order.DeliveryEstimateEndAt.ToShortTimeString())</span>
+                                }
+                                else
+                                {
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenDeliveryDateModalAsync()">Definir</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px symbol-circle me-3">
+                                <span class="symbol-label bg-success">
+                                    <i class="ki-outline ki-user fs-2x text-white"></i>
+                                </span>
+                            </div>
+                            <div class="text-dark">
+                                @if (_order.DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                                {
+                                    <span class="fw-semibold opacity-75 d-block fs-6">Mesa</span>
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenCustomerModalAsync()">@(_order.TableReference ?? "Definir")</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold opacity-75 d-block fs-6">Cliente</span>
+                                    @if (_order.Customer == null)
+                                    {
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenCustomerModalAsync()">Definir</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenCustomerModalAsync()">@(_order.Customer.Name)</span>
+                                        <br>
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenCustomerModalAsync()">@(CustomerUtils.GetPhone(_order.Customer.Phone))</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px symbol-circle me-3">
+                                <span class="symbol-label @(_order.DeliveryTypeId == OrderDeliveryTypeConst.Counter ? "bg-secondary" : "bg-success")">
+                                    <i class="ki-outline ki-map fs-2x text-white"></i>
+                                </span>
+                            </div>
+                            <div class="text-dark">
+                                @if (_order.DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                                {
+                                    <span class="fw-semibold opacity-75 d-block fs-6">Endereço</span>
+                                    <span class="fw-bold fs-7">-</span>
+                                }
+                                else if(_order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                {
+                                    <span class="required fw-semibold opacity-75 d-block fs-6">Endereço</span>
+                                    @if (_order.ShippingAddress == null)
+                                    {
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenAddressModalAsync()">Definir</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenAddressModalAsync()">@($"{_order.ShippingAddress.Line1}, {_order.ShippingAddress.Number}" )</span>
+                                                                                                                                                                                                                                       <br>
+                                        <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenAddressModalAsync()">@($"{_order.ShippingAddress.Neighborhood} - {_order.ShippingAddress.CityState}" )</span>
+                                        @if (!string.IsNullOrEmpty(_order.ShippingAddress.Line2))
+                                        {
+                                            <br>
+                                            <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenAddressModalAsync()">@(_order.ShippingAddress.Line2)</span>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold opacity-75 d-block fs-6">Endereço</span>
+                                    <span class="fw-bold fs-7">@($"{Store?.Address?.Line1}, {Store?.Address?.Number}")</span><br>
+                                    @* <span class="fw-bold fs-7">@($"{Store?.Address?.Neighborhood} - {Store?.Address?.CityState}")</span> *@
+                                    @if (!string.IsNullOrEmpty(Store?.Address?.Line2))
+                                    {
+                                        <br>
+                                        <span class="fw-bold fs-7">@(Store?.Address?.Line2)</span>   
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px symbol-circle me-3">
+                                <span class="symbol-label bg-success">
+                                    <i class="ki-outline ki-two-credit-cart fs-2x text-white"></i>
+                                </span>
+                            </div>
+                            <div class="text-dark">
+                                <span class="fw-semibold opacity-75 d-block fs-6">Forma de pagamento</span>
+                                @if (_order.PaymentMethodId == null)
+                                {
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenPaymentMethodModalAsync()">Definir</span>
+                                }
+                                else
+                                {
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenPaymentMethodModalAsync()">@(_paymentMethod?.AllPaymentMethods.FirstOrDefault(x => x.Id == _order.PaymentMethodId)?.Name)</span>
+                                    <br>
+                                    <span class="cursor-pointer fw-bold fs-7 text-decoration-underline" @onclick="async () => await OpenPaymentMethodModalAsync()">@(_paymentMethod?.AllPaymentMethods.FirstOrDefault(x => x.Id == _order.PaymentMethodId)?.Description)</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p>Carregando...</p>
+            }
+        </div>
+        <div>
+            <div class="row col-12">
+                <div class="col-6">
+                    <div class="card" style="padding: 1.5rem 2rem">
+                        <label class="form-label">Itens do pedido</label>
+                        <div class="row pt-0 pb-1 px-2 mb-1">
+                            <div class="card-body p-1">
+                                @if (_order?.Items.Count > 0)
+                                {
+                                    <div class="table-responsive mb-3">
+                                        <table class="table gs-0 gy-4 my-0">
+                                            <tbody>
+                                            @foreach (OrderItemModel item in _order.Items.Where(x => x.ExternalParentId == null))
+                                            {
+                                                <tr>
+                                                    <td class="pe-0">
+                                                        <span class="fw-semibold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1">@(CurrencyUtils.MoneyFormat(item.UnitValue)) - @(item.Item)</span>
+                                                        @foreach (OrderItemModel extra in _order.Items.Where(x => x.ExternalParentId == item.ExternalId))
+                                                        {
+                                                            <div class="text-muted fw-semibold fs-6">@(extra.Amount)x @(extra.Description): @(extra.Item)</div>
+                                                        }
+                                                        <div class="text-gray-800 fw-bold fs-6">@(item.Amount) @(item.Amount == 1 ? "unidade" : "unidades") - @(CurrencyUtils.MoneyFormat(_order.GetTotalItemValue(item.ExternalId)))</div>
+                                                    </td>
+                                                    <td class="w-80px text-end">
+                                                        <_InputDialer Width="100" Amount="@(item.Amount)" LimitUsed="@(item.Amount)" OnChange="(i) => ReceiptItemAmountChanged(item.ExternalId, i)"/>
+                                                    </td>
+                                                </tr>
+                                                <div class="separator separator-dashed my-2"></div>
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p>Nenhum item foi adicionado ao pedido</p>
+                                }
+                                <div class="d-flex flex-stack bg-success rounded-3 p-6 mb-0">
+                                    <div class="fs-6 fw-bold text-white">
+                                        <span class="d-block mb-2">Subtotal</span>
+                                        @if (_order?.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                        {
+                                            <span class="d-block mb-2">Valor da entrega</span>
+                                        }
+                                        <span class="d-block mb-2">Taxas e comissões</span>
+                                        <span class="d-block mb-9">Descontos</span>
+                                        <span class="d-block fs-2qx lh-1">Total do pedido</span>
+                                    </div>
+                                    <div class="fs-6 fw-bold text-white text-end">
+                                        <span class="d-block mb-2" data-kt-pos-element="total">@(CurrencyUtils.MoneyFormat(_order?.ItemsValue ?? 0))</span>
+                                        @if (_order?.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                        {
+                                            <span class="cursor-pointer d-block mb-2 text-decoration-underline">@(_order.DeliveryValue > 0 ? CurrencyUtils.MoneyFormat(_order?.DeliveryValue ?? 0) : "Definir")</span>
+                                        }
+                                        <span class="d-block mb-2" data-kt-pos-element="tax">0%</span>
+                                        @if (_order?.DiscountType == 2)
+                                        {
+                                            <span class="cursor-pointer d-block mb-9 text-decoration-underline" @onclick="async () => await OpenDiscountModalAsync()">@(_order.DiscountValue)%</span>
+                                        }
+                                        else if (_order?.DiscountType == 3)
+                                        {
+                                            <span class="cursor-pointer d-block mb-9 text-decoration-underline" @onclick="async () => await OpenDiscountModalAsync()">@(CurrencyUtils.MoneyFormat(_order.DiscountValue))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="cursor-pointer d-block mb-9 text-decoration-underline" @onclick="async () => await OpenDiscountModalAsync()">Definir</span>
+                                        }
+                                        <span class="d-block fs-2qx lh-1" data-kt-pos-element="grant-total">@(CurrencyUtils.MoneyFormat(_order?.TotalValue ?? 0))</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card" style="padding: 1.5rem 2rem">
+                        <label class="form-label">Cardápio</label>
+                        <div class="row col-12 mt-3">
+                            <div class="col-7">
+                                <div class="d-flex align-items-center position-relative mb-n7">
+                                    <i class="ki-outline ki-magnifier fs-3 position-absolute ms-4"></i>
+                                    <input type="text" class="form-control form-control-solid w-100 ps-12" placeholder="Filtrar cardápio" @oninput="args => SetProductFilter(args.Value?.ToString())">
+                                </div>
+                            </div>
+                            <div class="col-4 pe-0">
+                                <select class="form-select form-select-solid" @bind="@(_categoryFilter)">
+                                    <option value="0">Todos</option>
+                                    @if (_categories != null)
+                                    {
+                                        foreach (CategoryModel category in _categories)
+                                        {
+                                            <option value="@(category.Id)">@(category.Name)</option>
+                                        }
+                                    }
+                                </select>
+
+                            </div>
+                            <div class="col-1 pe-0">
+                                <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true">
+                                    <i class="ki-outline ki-dots-square fs-1 text-gray-500 me-n1"></i>
+                                </button>
+                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px" data-kt-menu="true" style="">
+                                    <div class="menu-item px-3">
+                                        <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">Ações rápidas</div>
+                                    </div>
+                                    <div class="separator mb-3 opacity-75"></div>
+                                    <div class="menu-item px-3 mb-3">
+                                        <a class="cursor-pointer menu-link px-3" @onclick="async () => await LoadCatalogAsync()">
+                                             <i class="ki-outline ki-arrows-circle fs-4 me-3 mb-0"></i> Atualizar
+                                        </a>
+                                    </div>
+                                    <div class="menu-item px-3 mb-3">
+                                        <a href="/catalogs" target="_blank" class="menu-link px-3">
+                                            <i class="ki-outline ki-exit-right-corner fs-4 me-3 mb-0"></i> Cadastrar item
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3" style="overflow-y: auto; max-height: 350px">
+                            <table class="table align-middle table-row-dashed fs-6 gy-3">
+                                <thead>
+                                <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="min-w-200px">Item</th>
+                                    <th class="min-w-100px text-end pe-2">Categoria</th>
+                                </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-600">
+                                @if (_products != null)
+                                {
+                                    foreach (ProductModel product in ProductFilter())
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="ms-0">
+                                                        <span class="text-gray-800 text-hover-primary fs-5 fw-bold cursor-pointer" @onclick="async () => await OpenBasketModalAsync(product.Id)">@(product.Name)</span>
+                                                        <div class="fw-semibold fs-7">@(CurrencyUtils.MoneyFormat(product.GetUnitPriceWithDiscount()))</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end pe-2">
+                                                <div class="text-muted fs-7">@(_categories?.FirstOrDefault(x => x.Id == product.CategoryId)?.Name)</div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="mt-5">Carregando...</p>
+                                }
+                                </tbody>
+                            </table>
+                            @if (_products?.Count == 0)
+                            {
+                                <div class="text-center mt-5">
+                                    <h2 class="fs-4 fw-bold mb-5">Nenhum produto cadastrado ainda</h2>
+                                    <p class="text-gray-400 fs-6 fw-semibold mb-5">
+                                        Clique no botão abaixo para cadastrar um novo produto
+                                    </p>
+                                    <a href="/catalogs" class="btn btn-sm fw-bold btn-success">
+                                        Cadastrar produto
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@if (_order != null)
+{
+    <DeliveryDateModal DeliveryTypeId="@(_order.DeliveryTypeId)" EstimateHourBeginAt="@(_order.DeliveryEstimateBeginAt)" EstimateHourEndAt="@(_order.DeliveryEstimateEndAt)" OnSave="DeliveryDateSaveCallback"/>    
+}
+
+<CustomerModal DeliveryTypeId="@(_order?.DeliveryTypeId ?? OrderDeliveryTypeConst.Counter)" OnTableConfirmed="TableConfirmed" OnCustomerConfirmed="CustomerConfirmed"/>
+<AddressModal OnSaved="ShippingAddressConfirmed"/>
+<PaymentMethodModal PaymentMethods="@(_paymentMethod)" OnSaved="PaymentMethodConfirmed"/>
+<DeliveryValueModal OnSaved="DeliveryValueConfirmed"/>
+<DiscountModal OnSaved="DiscountValueConfirmed"/>
+
+@if (_basket != null)
+{
+    <BasketModal Product="@(_basket)" OnSelected="AddItems"/>
+}
+
+@if (_order?.TrackId > 0)
+{
+    <SuccessModal OnCreateNew="PurgeOrder"/>
+}
+
+@code
+{
+    [CascadingParameter]
+    protected StoreModel? Store { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    private OrderModel? _order;
+
+    private PaymentMethodModel? _paymentMethod;
+    private List<ProductModel>? _products;
+    private List<CategoryModel>? _categories;
+    private StoreDeliveryModel? _deliveryModel;
+
+    private ProductModel? _basket;
+    private string? _productFilter;
+    private int _categoryFilter;
+
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (string.IsNullOrEmpty(Id))
+            {
+                await LoadDeliveryAsync();
+                await LoadPaymentMethodAsync();
+                await LoadCatalogAsync();
+                await LoadCategoryAsync();
+                
+                PurgeOrder();
+                
+                StateHasChanged();
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    async Task LoadPaymentMethodAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/PaymentMethod");
+        if (response.IsSuccessRequest)
+            _paymentMethod = JsonConvert.DeserializeObject<PaymentMethodModel?>(response.Json ?? string.Empty) ?? new PaymentMethodModel();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StateHasChanged();
+    }
+    
+    async Task LoadDeliveryAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/DeliveryArea");
+        if (!response.IsSuccessRequest)
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        
+        _deliveryModel = JsonConvert.DeserializeObject<StoreDeliveryModel?>(response.Json ?? string.Empty) ?? new StoreDeliveryModel();
+        
+    }
+
+    async Task LoadCatalogAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/Catalog");
+        if (response.IsSuccessRequest)
+            _products = JsonConvert.DeserializeObject<List<ProductModel>?>(response.Json ?? string.Empty) ?? new List<ProductModel>();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+    }
+
+    async Task LoadCategoryAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/Category?simplified=true");
+        if (response.IsSuccessRequest)
+            _categories = JsonConvert.DeserializeObject<List<CategoryModel>?>(response.Json ?? string.Empty) ?? new List<CategoryModel>();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+    }
+
+    async Task OpenDeliveryDateModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "delivery_date_modal");
+    }
+
+    async Task OpenCustomerModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("OnModalShow.Focus", "order_customer_modal", "customer_table");
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_customer_modal");
+    }
+
+    async Task OpenAddressModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("OnModalShow.Focus", "order_address_modal", "customer_table");
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_address_modal");
+    }
+
+    async Task OpenBasketModalAsync(int productId)
+    {
+        if (_products == null)
+            return;
+
+        _basket = _products.FirstOrDefault(x => x.Id == productId);
+        if (_basket == null)
+            return;
+
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_basket_modal");
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_basket_modal");
+    }
+    
+    async Task OpenDiscountModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_discount_modal");
+    }
+
+    async Task OpenPaymentMethodModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_payment_method_modal");
+    }
+
+    void SetProductFilter(string? filter)
+    {
+        _productFilter = string.IsNullOrEmpty(filter) ? null : filter.ToLower();
+        StateHasChanged();
+    }
+
+    IEnumerable<ProductModel> ProductFilter()
+    {
+        if (_products == null)
+            return new List<ProductModel>();
+
+        IEnumerable<ProductModel> query = _products.Where(x => x.Name != null);
+
+        if (_categoryFilter > 0)
+            query = query.Where(x => x.CategoryId == _categoryFilter);
+
+        if (!string.IsNullOrEmpty(_productFilter))
+            query = query.Where(x => x.Name != null && x.Name.ToLower().Contains(_productFilter.ToLower().Trim()));
+
+        return query;
+    }
+
+    void AddItems(List<OrderItemModel> items)
+    {
+        if (_order == null)
+            return;
+
+        _order.Items.AddRange(items);
+
+        _order.CalculateTotalValue();
+
+        _basket = null;
+    }
+
+    void ReceiptItemAmountChanged(Guid externalId, int amount)
+    {
+        OrderItemModel? item = _order?.Items.FirstOrDefault(x => x.ExternalId == externalId);
+        if (item == null)
+            return;
+
+        item.Amount = amount;
+
+        if (item.Amount < 1)
+            _order?.Items.Remove(item);
+
+        _order?.CalculateTotalValue();
+
+        StateHasChanged();
+    }
+
+    void DeliveryDateSaveCallback((DateTime estimateBeginAt, DateTime estimateEndAt, bool isSchedule) resp)
+    {
+        if (_order == null)
+            return;
+
+        _order.DeliveryEstimateBeginAt = resp.estimateBeginAt;
+        _order.DeliveryEstimateEndAt = resp.estimateEndAt;
+        _order.IsScheduled = resp.isSchedule;
+
+        StateHasChanged();
+    }
+
+    void TableConfirmed(string? table)
+    {
+        if (_order == null)
+            return;
+
+        _order.TableReference = table;
+    }
+
+    void CustomerConfirmed(CustomerModel? customer)
+    {
+        if (_order == null)
+            return;
+
+        _order.Customer = customer;
+    }
+
+    void ShippingAddressConfirmed(ShippingAddressModel? shippingAddress)
+    {
+        if (_order == null)
+            return;
+
+        _order.ShippingAddress = shippingAddress;
+    }
+
+    void PaymentMethodConfirmed(int? paymentMethodId)
+    {
+        if (_order == null)
+            return;
+
+        _order.PaymentMethodId = paymentMethodId;
+    }
+
+    void DeliveryValueConfirmed(decimal deliveryValue)
+    {
+        if (_order == null)
+            return;
+
+        _order.DeliveryValue = deliveryValue;
+        _order.CalculateTotalValue();
+    }
+
+    void DiscountValueConfirmed((int Type, decimal Value) discount)
+    {
+        if (_order == null)
+            return;
+
+        _order.DiscountValue = discount.Value;
+        _order.DiscountType = discount.Type;
+        
+        _order.CalculateTotalValue();
+    }
+
+    async Task SaveAsync()
+    {
+        if (_order == null)
+            return;
+
+        if (_order.DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+        {
+            _order.Customer = null;
+            _order.ShippingAddress = null;
+            _order.DeliveryValue = 0;
+        }
+        else
+            _order.TableReference = null;
+        
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/Order", _order);
+        _loading = false;
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        var order = JsonConvert.DeserializeObject<OrderModel?>(response.Json ?? string.Empty);
+        if (order == null)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", "Ocorreu um erro ao desserializar o pedido salvo.");
+            return;
+        }
+
+        _order.TrackId = order.TrackId;
+        _order.Number = order.Number;
+        
+        StateHasChanged();
+        
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "order_success_modal");
+    }
+
+    void PurgeOrder()
+    {
+        _order = new OrderModel
+        {
+            Status = OrderStatusConst.Confirmed,
+            DeliveryTypeId = OrderDeliveryTypeConst.Counter,
+            DiscountType = OrderDiscountTypeConst.None
+        };
+        
+        if (_order is {Id: 0 })
+        {
+            _order.DeliveryEstimateBeginAt = DateTimeUtils.Now().AddMinutes(_deliveryModel?.WithdrawTimeMin ?? 25);
+            _order.DeliveryEstimateEndAt = DateTimeUtils.Now().AddMinutes(_deliveryModel?.WithdrawTimeMax ?? 45);
+        }
+    }
+}

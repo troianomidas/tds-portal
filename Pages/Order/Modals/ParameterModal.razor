@@ -1,0 +1,106 @@
+﻿@using System.Dynamic
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_parameter_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    <h1 class="mb-3">Parametrização da pesquisa</h1>
+                    <div class="text-muted fw-semibold fs-5">Configurações que permitem personalizar a pesquisa e filtragem de pedidos de acordo com critérios específicos.</div>
+                </div>
+                @if (Settings != null)
+                {
+                    <div class="row col-12 mb-8">
+                        <div class="col-6">
+                            <div class="form-floating w-100">
+                                <select class="form-select" @bind="@(Settings.FilterOrderDateType)">
+                                    <option value="1">data de quando foi criado</option>
+                                    <option value="2">data de quando será entregue</option>
+                                </select>
+                                <label class="form-label mb-3">Consultar pedidos por</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating w-100">
+                                <select class="form-select" @bind="@(Settings.FilterOrderSortType)">
+                                     <option value="1">data</option>
+                                    <option value="2">número</option>
+                                    <option value="3">status</option>
+                                </select>
+                                <label class="form-label mb-3">Ordenar por</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating w-100">
+                                <select class="form-select" @bind="@(Settings.FilterOrderSortAsc)">
+                                    <option value="1">crescente</option>
+                                    <option value="0">decrescente</option>
+                                </select>
+                                <label class="form-label mb-3">Função</label>
+                            </div>
+                        </div>
+                    </div>
+                }
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3">
+                        Fechar
+                    </button>
+                    @if (_loading)
+                    {
+                        <_LoadingButton Class="btn-success" />
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public EventCallback<(int FilterOrderDateType, int FilterOrderSortType, int FilterOrderSortAsc)> OnSaved { get; set; }
+
+    [Parameter]
+    public StoreSettingsModel? Settings { get; set; }
+
+    private bool _loading;
+
+    async Task SaveAsync()
+    {
+        if (Settings == null)
+            return;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/store/settings", new
+        {
+            Settings.FilterOrderDateType, Settings.FilterOrderSortType, Settings.FilterOrderSortAsc
+        });
+
+        _loading = false;
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Parametrização da pesquisa salva com sucesso.");
+
+        await OnSaved.InvokeAsync((Settings.FilterOrderDateType, Settings.FilterOrderSortType, Settings.FilterOrderSortAsc));
+        await CloseAsync();
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_parameter_modal");
+}

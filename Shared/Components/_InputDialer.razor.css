@@ -1,0 +1,10 @@
+﻿.image-input-placeholder {
+    background-image: url('https://delivery3-dzgdgkbdccbefha5.z03.azurefd.net/portal/media/svg/files/blank-image.svg');
+}
+
+.thumbnail-remove{
+    left: 100%;
+    cursor: pointer;
+    position: absolute;
+    transform: translate(-50%,-50%);
+}

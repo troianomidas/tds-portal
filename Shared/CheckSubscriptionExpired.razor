@@ -1,0 +1,22 @@
+﻿@inject NavigationManager NavigationManager
+
+@code
+{
+    [Parameter]
+    public int StoreStatus { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (StoreStatus != 3)
+            return;
+
+        try
+        {
+            NavigationManager.NavigateTo("/subscription/expired", true);
+        }
+        catch (Exception e)
+        {
+    // ignored
+        }
+    }
+}

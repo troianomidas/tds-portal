@@ -1,0 +1,144 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="delivery_date_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    @if (DeliveryTypeId == OrderDeliveryTypeConst.Withdraw)
+                    {
+                        <h1 class="mb-3">Data da Retirada</h1>    
+                    }
+                    else
+                    {
+                        <h1 class="mb-3">Data da Entrega</h1>
+                    }
+                    <div class="text-muted fw-semibold fs-5">
+                        Para personalizar o prazo de entrega padrão, por favor, acesse <a href="/delivery" target="_blank" class="fw-bold link-primary">Entrega</a>.
+                    </div>
+                </div>
+                <div class="row col-12">
+                    <div class="col-6">
+                        <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                            <span class="required">Data</span>
+                        </label>
+                        <input type="text" class="form-control form-control-solid flatpicker" placeholder="dd/mm/aaaa" value="@(_estimateDate.ToString("d"))">
+                    </div>
+                    <div class="col-6">
+                        <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                            <span class="required">Horário de início</span>
+                        </label>
+                        <select class="form-select form-select-solid mb-10" @bind="_estimateHourBegin">
+                            <_SelectOptionHour Hour="@(_estimateHourBegin)"/>
+                        </select>
+                        <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                            <span class="required">Horário de fim</span>
+                        </label>
+                        <select class="form-select form-select-solid mb-10" @bind="_estimateHourEnd">
+                            <_SelectOptionHour Hour="@(_estimateHourEnd)"/>
+                        </select>
+                        <div class="d-flex flex-stack mb-8">
+                            <div class="me-5">
+                                <label class="fs-6 fw-semibold">Pedido para agendamento?</label>
+                                <div class="fs-7 fw-semibold text-muted">Maior facilidade para gerenciar sua operação</div>
+                            </div>
+                            <label class="form-check form-switch form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" checked="@_isSchedule" @onchange='ChangeSchedule'>
+                                <span class="form-check-label fw-semibold text-muted">
+                                    @(_isSchedule ? "Sim" : "Não")
+                                </span>
+                            </label>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-light me-3">
+                                Fechar
+                            </button>
+                            @if (_loading)
+                            {
+                                <_LoadingButton />                                
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary" @onclick="async () => await SaveAsync()">Confirmar</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int DeliveryTypeId { get; set; }
+    
+    [Parameter]
+    public DateTime EstimateHourBeginAt { get; set; }
+
+    [Parameter]
+    public DateTime EstimateHourEndAt { get; set; }
+    
+    [Parameter]
+    public EventCallback<(DateTime estimateBeginAt, DateTime estimateEndAt, bool isSchedule)> OnSave { get; set; }
+
+    private DateTime _estimateDate = DateTimeUtils.Now();
+    private string? _estimateHourBegin;
+    private string? _estimateHourEnd;
+    private bool _isSchedule;
+    private bool _loading;
+    
+    private StoreDeliveryModel? _deliveryModel;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("GLOBAL.SetDotnetReference", DotNetObjectReference.Create(this));
+            await JsRuntime.InvokeVoidAsync("DatePicker.OrderCreate", "input.flatpicker", "SetDeliveryEstimate");
+
+            _estimateHourBegin = EstimateHourBeginAt.ToShortTimeString();
+            _estimateHourEnd = EstimateHourEndAt.ToShortTimeString();
+            
+            StateHasChanged();
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        if (string.IsNullOrEmpty(_estimateHourBegin) || string.IsNullOrEmpty(_estimateHourEnd))
+            return;
+
+        DateTime deliveryEstimateBeginAt = DateTime.Parse($"{_estimateDate.ToShortDateString()} {_estimateHourBegin}");
+        DateTime deliveryEstimateEndAt = DateTime.Parse($"{_estimateDate.ToShortDateString()} {_estimateHourEnd}");
+        
+        await OnSave.InvokeAsync((deliveryEstimateBeginAt, deliveryEstimateEndAt, _isSchedule));
+        await CloseAsync();
+    }
+    
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "delivery_date_modal");
+
+    void ChangeSchedule(ChangeEventArgs e)
+    {
+        _isSchedule = e.Value?.ToString() == "True";
+    }
+    
+    [JSInvokable("SetDeliveryEstimate")]
+    public void SetDeliveryEstimate(DatePicker datePicker)
+    {
+        _estimateDate = DateTime.Parse(datePicker.DateStr ?? DateTimeUtils.Now().ToString(CultureInfo.InvariantCulture));
+        StateHasChanged();
+    }
+
+    public class DatePicker
+    {
+        public string? DateStr { get; set; }
+    }
+}

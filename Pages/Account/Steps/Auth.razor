@@ -1,0 +1,154 @@
+@inject IJSRuntime JsRuntime
+@inject IPublicIpService PublicIpService
+
+<div class="text-center mb-11">
+    <h1 class="text-gray-900 fw-bolder mb-3">
+        Dados de acesso
+    </h1>
+    <div class="text-gray-500 fw-semibold fs-6">
+        Você usará esse e-mail e senha para acessar sua conta Quantso.
+    </div>
+</div>
+@if (Model.User != null)
+{
+    <div class="fv-row mb-6 fv-plugins-icon-container">
+        <label class="form-label required">E-mail</label>
+        <input type="email" maxlength="100" autocomplete="off" class="form-control" @bind="@(Model.User.Email)">
+        @if (_fieldError == "email")
+        {
+            <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+        }
+    </div>
+    <div class="fv-row mb-6 fv-plugins-icon-container" data-kt-password-meter="true">
+        <label class="form-label required">Senha</label>
+        <div class="mb-1">
+            <div class="position-relative mb-3">
+                <input id="kt_password_meter_control" maxlength="45" class="form-control" type="password" name="password" autocomplete="off" @bind="@(Model.User.Password)" data-kt-password-meter="true">
+                <div data-lastpass-icon-root="true" style="position: relative !important; height: 0px !important; width: 0px !important; float: left !important;"></div>
+            </div>
+            <div class="d-flex align-items-center mb-3" data-kt-password-meter-control="highlight">
+                <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px"></div>
+            </div>
+        </div>
+        @if (_fieldError == "pass")
+        {
+            <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+        }
+    </div>
+    <div class="fv-row mb-6 fv-plugins-icon-container">
+        <label class="form-label required">Confirmar senha</label>
+        <input type="password" name="confirm-password" maxlength="45" autocomplete="off" class="form-control" @bind="@(_passConfirmed)">
+        @if (_fieldError == "passConfirmed")
+        {
+            <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback mt-2">@(_msgError)</div>
+        }
+    </div>
+    <div class="fv-row mb-6 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
+        <span class="form-check-label fw-semibold text-gray-700 fs-base">
+            Ao se cadastrar, você concorda com nossos <a href="#" class="ms-1 link-primary">Termos, Política de Privacidade</a> e <a href="#" class="ms-1 link-primary">Política de Cookies</a>.
+        </span>
+    </div>
+}
+
+<div class="d-flex flex-stack pt-3 mb-0">
+    <div class="mr-2">
+        <button type="button" class="btn btn-light-success me-3" @onclick="async () => await OnBack.InvokeAsync(true)">
+            <i class="ki-outline ki-arrow-left fs-4 me-1"></i> Voltar
+        </button>
+    </div>
+
+    <div>
+        @if (_loading)
+        {
+            <_LoadingButton Class="btn-success"/>
+        }
+        else
+        {
+            <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">
+                Continuar
+                <i class="ki-outline ki-arrow-right fs-4 ms-1"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public required StoreModel Model { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> OnConfirmed { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnBack { get; set; }
+
+    private string? _passConfirmed;
+
+    private bool _loading;
+    private string? _msgError;
+    private string? _fieldError;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("InputMask.Password");
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        _msgError = null;
+        _fieldError = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        try
+        {
+            Validate();
+
+            if (Model.User == null)
+                return;
+
+            Model.User.PublicIp = await PublicIpService.GetAsync();
+        }
+        catch (Exception e)
+        {
+            _msgError = e.Message;
+            _fieldError = e.InnerException?.Message;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", _msgError);
+            return;
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        await OnConfirmed.InvokeAsync(true);
+    }
+
+    void Validate()
+    {
+        if (Model.User == null)
+            return;
+
+        if (string.IsNullOrEmpty(Model.User.Email))
+            throw new InvalidOperationException("Preencha o e-mail.", new Exception("email"));
+
+        if (!Model.User.Email.Contains("@") || !Model.User.Email.Contains("."))
+            throw new InvalidOperationException("Informe um e-mail válido.", new Exception("email"));
+
+        if (string.IsNullOrEmpty(Model.User.Password) || Model.User.Password.Trim().Length < 8)
+            throw new InvalidOperationException("Informe uma senha com no mínimo 8 caracteres.", new Exception("pass"));
+
+        if (Model.User.Password.Trim().Length > 45)
+            throw new InvalidOperationException("Informe uma senha com no máximo 45 caracteres.", new Exception("pass"));
+
+        if (_passConfirmed?.Trim() != Model.User.Password.Trim())
+            throw new InvalidOperationException("As senhas não são iguais.", new Exception("passConfirmed"));
+    }
+}

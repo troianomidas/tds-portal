@@ -1,0 +1,341 @@
+﻿@page "/delivery"
+
+@attribute [Authorize]
+
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_toolbar" class="app-toolbar mt-8">
+        <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <div class="page-title d-flex flex-column justify-content-center me-3 ">
+                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                    Delivery
+                </h1>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1">
+                    <li class="breadcrumb-item text-muted">
+                        <a class="text-muted text-hover-success">
+                            Ajuste a forma de entrega dos pedidos de acordo com as suas necessidades
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+        <div id="kt_app_content_container" class="app-container container-xxl">
+            @if (_deliveryModel != null)
+            {
+                <div class="card mb-5">
+                    <div class="card-header card-header-stretch pb-0">
+                        <div class="card-title">
+                            <h3 class="m-0">Opções de pedidos</h3>
+                        </div>
+                    </div>
+                    <div class="card-body border-top p-9">
+                        <div class="d-flex flex-stack">
+                            <div class="d-flex">
+                                <label class="form-check form-check-custom form-check-solid align-items-start">
+                                    <input class="form-check-input me-3" type="checkbox" checked="@(_deliveryModel.HasWithdraw)" @onchange='(e) => _deliveryModel.HasWithdraw = e.Value?.ToString() == "True"'>
+                                    <span class="form-check-label d-flex flex-column align-items-start">
+                                        <span class="text-gray-800 fw-bold fs-5 mb-0">Retirada</span>
+                                        <span class="text-muted fs-6">Permite que os clientes escolham buscar o pedido na loja</span>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-floating mb-0">
+                                            <input text="text" placeholder="E-mail" class="form-control form-control-solid number" onclick="$(this).select()" @bind="_deliveryModel.WithdrawTimeMin"/>
+                                            <label class="required">Tempo mínimo (minutos)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-floating mb-0">
+                                            <input text="text" placeholder="E-mail" class="form-control form-control-solid number" onclick="$(this).select()" @bind="_deliveryModel.WithdrawTimeMax"/>
+                                            <label class="required">Tempo máximo (minutos)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="separator separator-dashed my-6"></div>
+                        <div class="d-flex flex-stack">
+                            <div class="d-flex">
+                                <label class="form-check form-check-custom form-check-solid align-items-start">
+                                    <input class="form-check-input me-3" type="checkbox" checked="@(_deliveryModel.HasDelivery)" @onchange='(e) => _deliveryModel.HasDelivery = e.Value?.ToString() == "True"'>
+                                    <span class="form-check-label d-flex flex-column align-items-start">
+                                        <span class="text-gray-800 fw-bold fs-5 mb-0">Entrega</span>
+                                        <span class="text-muted fs-6">Sua loja faz a entrega do pedido no local do cliente</span>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-floating mb-0">
+                                            <input text="text" placeholder="E-mail" class="form-control form-control-solid number" onclick="$(this).select()" @bind="_deliveryModel.DeliveryTimeMin"/>
+                                            <label class="required">Tempo mínimo (minutos)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-floating mb-0">
+                                            <input text="text" placeholder="E-mail" class="form-control form-control-solid number" onclick="$(this).select()" @bind="_deliveryModel.DeliveryTimeMax"/>
+                                            <label class="required">Tempo máximo (minutos)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="separator separator-dashed my-6"></div>
+                        @if (_deliveryModel.HasDelivery)
+                        {
+                            <div class="d-flex flex-stack">
+                                <div class="d-flex">
+                                    <label class="form-check form-check-custom form-check-solid align-items-start">
+                                        <input class="form-check-input me-3" type="checkbox" checked="@(_deliveryModel.HasFreeDelivery)" @onchange='(e) => _deliveryModel.HasFreeDelivery = e.Value?.ToString() == "True"'>
+                                        <span class="form-check-label d-flex flex-column align-items-start">
+                                            <span class="text-gray-800 fw-bold fs-5 mb-0">Frete grátis</span>
+                                            <span class="text-muted fs-6">Oferecer frete grátis para pedidos que atingirem determinado valor</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-floating mb-0">
+                                                <input text="text" placeholder="E-mail" class="form-control form-control-solid money" onclick="$(this).select()" @bind="_deliveryModel.FreeDeliveryFrom"/>
+                                                <label class="required">A partir de R$</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="separator separator-dashed my-6 mb-0"></div>
+                        }
+                    </div>
+                </div>
+
+                if (_deliveryModel.HasDelivery)
+                {
+                    <div class="card mb-5">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>Áreas de entrega</h3>
+                            </div>
+                            <div class="card-toolbar">
+                                <div class="my-1 me-4">
+                                    <select class="form-select form-select-sm1 form-select-solid" @onchange="async (e) => await HasDeliveryAreaChangedAsync(e)">
+                                        @if (_deliveryModel.HasDeliveryArea)
+                                        {
+                                            <option value="0">Todos os bairros</option>
+                                            <option value="1" selected="">Selecionar bairros</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="0" selected="">Todos os bairros</option>
+                                            <option value="1">Selecionar bairros</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body border-top p-9 p-0">
+                            @if (_deliveryModel.HasDeliveryArea)
+                            {
+                                if (_deliveryAreas != null)
+                                {
+                                    foreach (DeliveryAreaModel item in _deliveryAreas)
+                                    {
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <div class="form-floating mb-0">
+                                                    <input text="text" class="form-control form-control-solid" onclick="this.select();" placeholder="Nome do bairro" autocomplete="off" @bind="@(item.Name)"/>
+                                                    <label class="required">Nome do bairro</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="form-floating mb-0">
+                                                    <input text="text" class="form-control form-control-solid money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(item.Fee)"/>
+                                                    <label class="required">Valor do frete em R$</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-2 text-end mt-4">
+                                                <button type="button" class="btn btn-sm btn-icon btn-light-danger btn-active-light-danger h-35px w-35px" @onclick="() => Remove(item.InternalId)">
+                                                    <i class="ki-outline fs-4 m-0 ki-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="separator separator-dashed my-3"></div>
+                                    }
+                                }
+
+                                <div class="notice d-flex bg-light-success rounded border-success border border-dashed mt-0 mb-0 p-6">
+                                    <div class="d-flex flex-stack flex-grow-1" @onclick="async () => await NewDeliveryAreaAsync()">
+                                        <span id="btn-add-neighborhood" class="fw-bold fs-6 cursor-pointer text-success text-decoration-underline">Adicionar bairro</span>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-stack">
+                                    <div class="d-flex">
+                                        <label class="form-check form-check-custom form-check-solid align-items-start">
+                                            <span class="form-check-label d-flex flex-column align-items-start">
+                                                <span class="text-gray-800 fw-bold fs-5 mb-0">Valor do frete</span>
+                                                <span class="text-muted fs-6">Esse é o valor fixo a ser cobrado do cliente para entregar em qualquer bairro da cidade</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-floating mb-0">
+                                                    <input text="text" class="form-control form-control-solid money" onclick="this.select();" placeholder="0,00" autocomplete="off" @bind="@(_deliveryModel.DeliveryFee)"/>
+                                                    <label class="required">Valor em R$</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="separator separator-dashed my-6 mb-0"></div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            <div class="text-end gap-2 pt-2 pb-6">
+                @if (_loading)
+                {
+                    <_LoadingButton Class="btn-sm btn-success" Text="Salvando..."/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-success" @onclick="async () => await SaveAsync()">Salvar alterações</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private StoreDeliveryModel? _deliveryModel;
+    private List<DeliveryAreaModel>? _deliveryAreas;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadDeliveryAsync();
+            await LoadDeliveryAreasAsync();
+
+            await JsRuntime.InvokeVoidAsync("InputMask.Number");
+            await JsRuntime.InvokeVoidAsync("InputMask.Money");
+        }
+    }
+
+    async Task LoadDeliveryAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/DeliveryArea");
+        if (response.IsSuccessRequest)
+            _deliveryModel = JsonConvert.DeserializeObject<StoreDeliveryModel?>(response.Json ?? string.Empty) ?? new StoreDeliveryModel();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StateHasChanged();
+    }
+
+    async Task LoadDeliveryAreasAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/DeliveryArea/Areas");
+        if (response.IsSuccessRequest)
+            _deliveryAreas = JsonConvert.DeserializeObject<List<DeliveryAreaModel>>(response.Json ?? string.Empty) ?? new List<DeliveryAreaModel>();
+        else
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+
+        StateHasChanged();
+    }
+
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/DeliveryArea", _deliveryModel);
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            _loading = false;
+            return;
+        }
+
+        ApiResponse response2 = await DataRequest.SendAsync(HttpMethod.Put, "/DeliveryArea/Areas", new { Items = _deliveryAreas });
+        if (!response2.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response2.Error);
+            _loading = false;
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Delivery da loja alterada com sucesso.");
+        NavigationManager.NavigateTo("/delivery");
+
+        _loading = false;
+    }
+
+    async Task NewDeliveryAreaAsync()
+    {
+        if (_deliveryAreas == null)
+            return;
+
+        if (_deliveryAreas.Count > 100)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", "Você só pode adicionar 100 bairros para entrega.");
+            return;
+        }
+
+        _deliveryAreas.Add(new DeliveryAreaModel
+        {
+            Fee = 0,
+            Name = ""
+        });
+
+        StateHasChanged();
+
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+        await JsRuntime.InvokeVoidAsync("ElementInvoke.Scroll", "btn-add-neighborhood");
+    }
+
+    void Remove(Guid internalId)
+    {
+        if (_deliveryAreas == null)
+            return;
+
+        DeliveryAreaModel? item = _deliveryAreas.FirstOrDefault(x => x.InternalId == internalId);
+        if (item == null)
+            return;
+
+        _deliveryAreas = _deliveryAreas.FindAll(x => x.InternalId != item.InternalId);
+
+        StateHasChanged();
+    }
+
+    async Task HasDeliveryAreaChangedAsync(ChangeEventArgs obj)
+    {
+        if (_deliveryModel == null)
+            return;
+
+        _deliveryModel.HasDeliveryArea = obj.Value?.ToString() == "1";
+
+        StateHasChanged();
+
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+        await JsRuntime.InvokeVoidAsync("InputMask.Money");
+    }
+}

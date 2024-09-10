@@ -1,0 +1,99 @@
+﻿@using WebApp.Models.Order
+@using WebApp.Models.Reviews
+@using OrderModel = WebApp.Models.Reviews.OrderModel
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="kt_review_detail_modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog mw-650px">
+        <div class="modal-content">
+            <div class="card card-flush py-4 flex-row-fluid mb-0">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>Detalhes do Pedido Nº @Review.Order.Number</h2>
+                    </div>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-outline ki-cross fs-1"></i>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-bordered mb-0 mt-0 mr-0 fs-6 gy-5 min-w-300px">
+                            <tbody class="fw-semibold text-gray-600">
+                            <tr>
+                                <td class="text-muted">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-outline ki-calendar fs-2 me-2"></i> Data do Pedido
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-end">@Review.Order.CreatedAt!.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-outline ki-truck fs-2 me-2"></i> Data de Entrega
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-end">@Review.Order.DeliveredAt!.Value.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                            @if (Review.Order.Items != null)
+                            {
+                                <tr>
+                                    <td class="text-muted">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-outline ki-coffee fs-2 me-2"></i> Pedido
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold text-end">
+                                        @foreach (OrderItemModel? orderItem in Review.Order.Items)
+                                        {
+                                            @orderItem.Item
+                                            @if (orderItem != Review.Order.Items.Last())
+                                            {
+                                                <text>, </text>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-outline ki-information fs-2 me-2"></i> Detalhes do Pedido
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold text-end">
+                                        @foreach (OrderItemModel? orderItem in Review.Order.Items)
+                                        {
+                                            @orderItem.Description
+                                            @if (orderItem != Review.Order.Items.Last())
+                                            {
+                                                <text>, </text>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+
+    [Parameter]
+    public ListReviewResponseSegment Review { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("GLOBAL.SetDotnetReference", DotNetObjectReference.Create(this));
+        }
+    }
+}

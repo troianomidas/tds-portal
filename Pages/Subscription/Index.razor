@@ -1,0 +1,219 @@
+﻿@page "/subscription"
+
+@attribute [Authorize]
+
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_toolbar" class="app-toolbar mt-8">
+        <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <div class="page-title d-flex flex-column justify-content-center gap-1 me-3">
+                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                    Assinatura e cobranças
+                </h1>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0">
+                    <li class="breadcrumb-item text-muted">
+                        <a href="/" class="text-muted text-hover-primary">
+                            Quantso
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <span class="bullet bg-gray-500 w-5px h-2px"></span>
+                    </li>
+                    <li class="breadcrumb-item text-muted">
+                        <a href="/subscription" class="text-muted text-hover-primary">
+                            Assinatura
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <span class="bullet bg-gray-500 w-5px h-2px"></span>
+                    </li>
+                    <li class="breadcrumb-item text-muted">
+                        Comprar ou cancelar uma assinatura
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="kt_app_content" class="app-content flex-column-fluid py-3 mt-5">
+        <div id="kt_app_content_container" class="app-container container-xxl">
+            <div class="card card-flush pt-3 mb-8">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h5 class="fw-bold">Assinatura</h5>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="mb-5">
+                        <div class="d-flex flex-wrap py-0">
+                            <div class="flex-equal me-5">
+                                <table class="table fs-6 fw-semibold gs-0 gy-2 gx-2 m-0">
+                                    <tbody>
+                                    <tr>
+                                        <td class="text-gray-400 min-w-175px w-175px">Nome:</td>
+                                        <td class="text-gray-800">
+                                            @(MainLayout?.Store?.OwnerName)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-400">CPF do responsável legal:</td>
+                                        <td class="text-gray-800">
+                                            @(MainLayout?.Store?.OwnerDocument)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-400">Telefone ou celular:</td>
+                                        <td class="text-gray-800">@(MainLayout?.Store?.Phone)</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex-equal">
+                                <table class="table fs-6 fw-semibold gs-0 gy-2 gx-2 m-0">
+                                    <tbody>
+                                    <tr>
+                                        <td class="text-gray-400">Plano Padrão:</td>
+                                        @if (_subscription == null)
+                                        {
+                                            <td class="text-gray-800">-</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="text-gray-800">@(CurrencyUtils.MoneyFormat(_subscription.Amount))/mês</td>
+                                        }
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-400">Data de Vencimento:</td>
+                                        @if (_subscription == null)
+                                        {
+                                            <td class="text-gray-800">-</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="text-gray-800">@(_subscription.NextDueDate.Date.ToShortDateString())</td>
+                                        }
+
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-400">Status:</td>
+                                        <td class="text-gray-800">
+                                            @if (_subscription?.Status is > 0 or < 3)
+                                            {
+                                                <span class="fs-6 text-gray-800">Ativo</span>
+                                            }
+                                            else if (_subscription?.Status == 3)
+                                            {
+                                                <span class="fs-6 text-gray-800">Expirado</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fs-6 text-gray-800">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @if (_subscription?.Billings?.Count > 0)
+                    {
+                        <div class="pt-5">
+                            <h5 class="mb-4">Histórico de cobranças</h5>
+                            <div class="table-responsive">
+                                <table class="table align-middle table-row-dashed fs-6 gy-4 mb-0">
+                                    <thead>
+                                    <tr class="border-bottom border-gray-200 text-center text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                        <th class="text-start min-w-125px">Fatura</th>
+                                        <th class="min-w-125px ">Número</th>
+                                        <th class="min-w-125px">Vencimento</th>
+                                        <th class="min-w-125px">Valor</th>
+                                        <th class="w-150px"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-800 text-center">
+                                    @foreach (SubscriptionBilling item in _subscription.Billings)
+                                    {
+                                        <tr class="fs-6 text-center pe-0 fw-semibold text-gray-800">
+                                            <td class="text-start">
+                                                <span>Em aberto</span>
+                                            </td>
+                                            <td class="ps-0">
+                                                <span>@(item.ChargeId)</span>
+                                            </td>
+                                            <td class="ps-0">
+                                                <span>@(item.ExpireAt.ToShortDateString())</span>
+                                            </td>
+                                            <td class="ps-0">
+                                                <span>@(CurrencyUtils.MoneyFormat(item.Amount))</span>
+                                            </td>
+                                            <td class="">
+                                                <a href="@(item.BilletLink)" target="_blank" class="btn btn-sm btn-light-success">Pagar Fatura</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pt-8 mb-0" style="padding: 0 14rem;">
+                            <h1 class="fw-semibold text-gray-800 text-center lh-lg fs-5">
+                                <span class="fw-bold fs-3">Sua assinatura está ativa</span><br>
+                                Aguarde até que a cobrança seja emitida e apareça para você na tela
+                            </h1>
+                            <div class="py-10 text-center">
+                                <img src="@(StorageConst.FrontDoor)/portal/assets/media/svg/illustrations/easy/2.svg" class="theme-light-show w-150px" alt="">
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="notice d-flex bg-light-success rounded border-success border border-dashed rounded-3 p-6">
+                <div class="d-flex flex-stack flex-grow-1 ">
+                    <div>
+                        <h4 class="text-gray-800 fw-bold">Cancelar sua assinatura Quantso</h4>
+                        <span>Os assinantes da plataforma podem cancelar e retomar a assinatura a qualquer momento. <a href="#" class="text-gray-800 fw-bold">Cancelar assinatura</a>.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [CascadingParameter]
+    protected MainLayout? MainLayout { get; set; }
+
+    private SubscriptionModel? _subscription;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadSubscriptionAsync();
+    }
+
+    async Task LoadSubscriptionAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse resp = await DataRequest.SendAsync(HttpMethod.Get, "/subscription");
+        _loading = false;
+        if (!resp.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", resp.Error);
+            return;
+        }
+
+        _subscription = JsonConvert.DeserializeObject<SubscriptionModel>(resp.Json ?? string.Empty);
+
+        StateHasChanged();
+        await JsRuntime.InvokeVoidAsync("Delivery3Theme.Init");
+    }
+}

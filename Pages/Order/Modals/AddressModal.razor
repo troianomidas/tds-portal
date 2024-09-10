@@ -1,0 +1,220 @@
+﻿@using WebApp.Models.Customers
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="modal fade" id="order_address_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-10 text-center">
+                    <h1 class="mb-3">Endereço</h1>
+                    <div class="text-muted fw-semibold fs-5">Informe um endereço de entrega para o cliente</div>
+                </div>
+
+                <div class="row col-12">
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" name="zipcode" class="form-control form-control-solid text-uppercase zipcode" placeholder="CEP" autocomplete="off" value="@(_zipcode)" @oninput="async (e) => await LoadAddressByZipcode(e.Value?.ToString())">
+                            @if (_errorField == "zipcode")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">CEP</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" maxlength="100" class="form-control form-control-solid text-uppercase" placeholder="Logradouro" autocomplete="off" @bind="@(_line1)">
+                            @if (_errorField == "line1")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">Logradouro</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" maxlength="20" class="form-control form-control-solid text-uppercase" placeholder="Número" @bind="@(_number)">
+                            @if (_errorField == "number")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">Número</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" maxlength="100" class="form-control form-control-solid text-uppercase" placeholder="Complemento" @bind="@(_line2)">
+                            <label class="form-label">Complemento</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" maxlength="65" class="form-control form-control-solid text-uppercase" placeholder="Bairro" @bind="@(_neighborhood)">
+                            @if (_errorField == "neighborhood")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">Bairro</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating mb-10">
+                            <input type="text" maxlength="100" class="form-control form-control-solid text-uppercase" placeholder="Cidade e Estado" readonly="readonly" @bind="@(_cityState)">
+                            @if (_errorField == "cityState")
+                            {
+                                <div class="fv-plugins-message-container invalid-feedback text-start">@(_errorMsg)</div>
+                            }
+                            <label class="form-label required">Cidade e Estado</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3">
+                        Fechar
+                    </button>
+                    @if (_loading)
+                    {
+                        <_LoadingButton Class="btn-success"/>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Confirmar</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public ShippingAddressModel? Address { get; set; }
+
+    [Parameter]
+    public EventCallback<ShippingAddressModel?> OnSaved { get; set; }
+
+    private string? _zipcode;
+    private string? _line1;
+    private string? _line2;
+    private string? _number;
+    private string? _neighborhood;
+    private string? _cityState;
+
+    private string? _errorMsg;
+    private string? _errorField;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("OnModalShow.Select", "order_address_modal", "zipcode");
+        }
+
+        await JsRuntime.InvokeVoidAsync("InputMask.Zipcode");
+    }
+
+    async Task EnterKeyPressAsync(string keyPress)
+    {
+        if (keyPress == "Enter")
+            await SaveAsync();
+    }
+
+    async Task SaveAsync()
+    {
+        _errorMsg = null;
+        _errorField = null;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+        _loading = false;
+
+        if (string.IsNullOrEmpty(_line1))
+        {
+            _errorMsg = "Esse campo é obrigatório.";
+            _errorField = "line1";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_number))
+        {
+            _errorMsg = "Esse campo é obrigatório.";
+            _errorField = "number";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_zipcode))
+        {
+            _errorMsg = "Esse campo é obrigatório.";
+            _errorField = "zipcode";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_neighborhood))
+        {
+            _errorMsg = "Esse campo é obrigatório.";
+            _errorField = "neighborhood";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_cityState))
+        {
+            _errorMsg = "Esse campo é obrigatório.";
+            _errorField = "cityState";
+            return;
+        }
+
+        await OnSaved.InvokeAsync(new ShippingAddressModel
+        {
+            Line1 = _line1.Trim().ToUpper(),
+            Line2 = _line2?.Trim().ToUpper(),
+            Number = _number,
+            Neighborhood = _neighborhood.Trim().ToUpper(),
+            CityState = _cityState.Trim().ToUpper(),
+            Zipcode = _zipcode
+        });
+
+        await CloseAsync();
+    }
+
+    async Task LoadAddressByZipcode(string? zipcode)
+    {
+        if (zipcode?.Length < 9)
+            return;
+
+        _zipcode = zipcode;
+
+        try
+        {
+            _loading = true;
+            HttpClient client = HttpClientFactory.CreateClient();
+            var address = await client.GetFromJsonAsync<ViacepAddress>($"https://viacep.com.br/ws/{zipcode}/json");
+
+            if (address == null)
+                return;
+
+            _cityState = $"{address.City}, {address.State}";
+            _line1 = address.Line1;
+            _neighborhood = address.Neighborhood;
+        }
+        catch
+        {
+    // ignored
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_address_modal");
+}

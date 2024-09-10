@@ -1,0 +1,178 @@
+@page "/account/login"
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+@inject IMemoryCache MemoryCache
+@inject IHttpClientFactory HttpClientFactory
+@inject IPublicIpService PublicIpService
+
+<PageTitle>Portal do Parceiro - Quantso | Cardápio Online</PageTitle>
+
+<link href="login.css" rel="stylesheet" type="text/css"/>
+
+<div class="d-flex flex-column flex-lg-row flex-column-fluid">
+    <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1">
+        <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+            <div class="w-lg-500px p-10">
+                @if (_waitVerification && _user != null)
+                {
+                    <_VerificationCode ToEmail="@(_user.Email)" ToName="@(_user.Email?.Split("@").FirstOrDefault())" PublicIp="@(_publicIp)" OnConfirmed="() => GoToLogin()" OnBack="() => GoBack()"/>
+                }
+                else
+                {
+                    <div class="form w-100">
+                        <div class="text-center mb-11">
+                            <a href="/">
+                                <img alt="Logo" src="/favicon.png" class="h-80px h-lg-85px"/>
+                            </a>
+                            <h1 class="text-gray-900 fw-bolder mt-8 mb-3">
+                                Acesso para clientes
+                            </h1>
+                            <div class="text-gray-500 fw-semibold fs-6">
+                                Acelere seu negócio com zero comissões e taxas
+                            </div>
+                        </div>
+                        <label class="form-label">E-mail</label>
+                        <div class="input-group mb-8">
+                            <input type="text" placeholder="nome@@email.com" class="form-control phone" autocomplete="off" @bind="@(_email)"/>
+                        </div>
+                        <label class="form-label">Senha</label>
+                        <div class="input-group mb-1">
+                            <input type="password" class="form-control" autocomplete="off" @bind="@(_password)"/>
+                        </div>
+                        @if (!string.IsNullOrEmpty(_error))
+                        {
+                            <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback">@(_error)</div>
+                        }
+                        <div class="fv-row mt-2 mb-8 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
+                            <span class="form-check-label fw-semibold text-gray-700 fs-base ms-1">
+                                <a href="#" class="link-primary">Problemas de acesso?</a>
+                            </span>
+                            <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                        </div>
+                        <div class="d-grid mb-10">
+                            @if (_loading)
+                            {
+                                <_LoadingButton Class="btn-success"/>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-success" @onclick="async () => await LoginAsync()">
+                                    Entrar
+                                </button>
+                            }
+                        </div>
+                        <div class="text-gray-500 text-center fw-semibold fs-6">
+                            Ainda não tem cadastro?
+                            <a href="/account/register" class="link-primary fw-semibold">
+                                Cadastre sua loja
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="w-lg-500px m-auto">
+            <p class="text-center">
+                © Copyright 2024 - Quantso Servicos de Informacoes e Gestao - Todos os direitos reservados.
+                CNPJ 52.355.778/0001-17
+            </p>
+        </div>
+    </div>
+    <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2" style="background-image: url(auth-bg.png)">
+        <div class="d-flex flex-column flex-center py-7 py-lg-15 px-5 px-md-15 w-100">
+            <a href="/" class="mb-0 mb-lg-12">
+                <img alt="Logo" src="@(StorageConst.FrontDoor)/portal/assets/media/misc/auth-screens.png" class="h-400px">
+            </a>
+            <img class="d-none d-lg-block mx-auto w-275px w-md-50 w-xl-500px mb-10 mb-lg-20" src="/metronic8/demo4/assets/media/misc/auth-screens.png" alt="">
+            <h1 class="d-none d-lg-block text-white fs-2qx fw-bolder text-center mb-7">
+                Seu negócio pede visibilidade pra vender mais
+            </h1>
+            <div class="d-none d-lg-block text-white fs-base text-center">
+                Com o iFood, você conecta sua loja a milhões de novos clientes, expande sua área de entrega e vende muito mais.
+                <br>
+                Utilize nossas ferramentas de marketing para ter mais visibilidade e chegar a milhões de pessoas que amam pedir comida pelo app.
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private string? _email;
+    private string? _password;
+    private UserModel? _user;
+    private string? _publicIp;
+
+    private bool _waitVerification;
+    private bool _loading;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            _publicIp = await PublicIpService.GetAsync();
+    }
+
+    async Task LoginAsync()
+    {
+        _error = null;
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/Account/GetUserByLogin", new
+        {
+            Email = _email,
+            Password = _password,
+            PublicIp = _publicIp
+        });
+        _loading = false;
+
+        if (!response.IsSuccessRequest)
+        {
+            _error = response.Error;
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", _error);
+
+            StateHasChanged();
+            return;
+        }
+
+        var login = JsonConvert.DeserializeObject<LoginResponse?>(response.Json ?? string.Empty);
+        _user = login?.User;
+
+        if (login?.IsVerificationRequired ?? false)
+        {
+            _waitVerification = true;
+
+            StateHasChanged();
+            return;
+        }
+
+        GoToLogin();
+    }
+
+    void GoToLogin()
+    {
+        if (_user == null)
+            return;
+        
+        var loginValidator = Guid.NewGuid().ToString();
+        MemoryCache.Set(loginValidator, _user.ExternalId, TimeSpan.FromHours(6));
+
+        NavigationManager.NavigateTo($"/web/auth/login?hash={loginValidator}", true);
+    }
+
+    void GoBack()
+    {
+        _waitVerification = false;
+        _user = null;
+        StateHasChanged();
+    }
+}

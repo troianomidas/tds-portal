@@ -1,0 +1,430 @@
+﻿@page "/catalogs"
+@using WebApp.Constants
+
+@attribute [Authorize(Policy = Policies.SubscriptionActive)]
+
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+@inject SweetAlertService Swal
+
+<div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_toolbar" class="app-toolbar mt-8">
+        <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <div class="page-title d-flex flex-column justify-content-center me-3 ">
+                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                    Cardápio     
+                </h1>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-6 my-0 pt-1">
+                    <li class="breadcrumb-item text-muted">
+                        <a class="text-muted text-hover-success">
+                            Ative ou pause a venda dos itens, altere os preços e ordene as categorias
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm fw-bold btn-success" @onclick="async () => await OpenCategoryModalAsync()">
+                    Adicionar categoria
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+        <div id="kt_app_content_container" class="app-container container-xxl draggable-zone">
+            @if (_categories == null || _categories.Count == 0)
+            {
+                <div class="alert alert-dismissible bg-light-success border border-success border-dashed d-flex flex-column flex-sm-row w-100 p-5 mb-5">
+                    <i class="ki-duotone ki-design-frame fs-2hx text-success me-4 mb-5 mb-sm-0">
+                     <span class="path1"></span>
+                     <span class="path2"></span>
+                    </i>
+                    <div class="d-flex flex-column pe-0 pe-sm-10">
+                        <h5 class="mb-1">Gerar Cardápio Digital com IA</h5>
+                        <span>Você pode gerar um cardápio online de acordo com o foco do seu negócio automaticamente em apenas alguns cliques. </span>
+                    </div>
+                </div>
+            }
+
+            @if (_categories != null)
+            {
+                foreach (CategoryModel category in _categories)
+                {
+                    <div class="card shadow-sm draggable mb-8" id="@(category.Id)">
+                        <div class="card-header cursor-pointer">
+                            <h3 class="card-title align-items-start flex-column">
+                                <span class="card-label fw-bold text-gray-800">@(category.Name)</span>
+                                @if (!string.IsNullOrEmpty(category.Description))
+                                {
+                                    <span class="text-gray-500 mt-1 fw-semibold fs-6">@(category.Description)</span>
+                                }
+                            </h3>
+                            <div class="card-toolbar" style="margin-left: auto; padding-right: 1rem">
+                                <a href="/catalog/create/@(category.Id)" class="btn btn-sm fw-bold btn-light-success me-4">
+                                    Cadastrar item
+                                </a>
+                                <button type="button" class="btn btn-icon btn-hover-light-primary draggable-handle me-4" title="Reordenar categorias">
+                                    <i class="ki-duotone ki-abstract-14 fs-1">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </button>
+                                <div class="me-0">
+                                    <button class="btn btn-sm btn-icon btn-bg-light btn-active-color-success" type="button" data-kt-menu-trigger="click" title="Detalhes">
+                                        <i class="ki-solid ki-dots-horizontal fs-2x me-1"></i>
+                                    </button>
+                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 fw-semibold w-200px py-3" data-kt-menu="true">
+                                        <div class="menu-item px-3">
+                                            <a class="menu-link flex-stack px-3 text-hover-success" @onclick="async () => await OpenEditCategoryModalAsync(category.Id)">
+                                                Editar
+                                                <span class="ms-2" data-bs-toggle="tooltip" title="Editar">
+                                                    <i class="ki-outline ki-pencil fs-6"></i>
+                                                </span>
+                                            </a>
+                                        </div>
+                                        <div class="menu-item px-3">
+                                            <a class="menu-link flex-stack px-3 text-hover-danger" @onclick="async () => await DeleteCategoryAsync(category.Id)">
+                                                Excluir
+                                                <span class="ms-2" data-bs-toggle="tooltip" title="Excluir">
+                                                    <i class="ki-outline ki-trash fs-6"></i>
+                                                </span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-toolbar" @onclick="() => category.Collapsed = !category.Collapsed">
+                                <i class="ki-duotone @(category.Collapsed ? "ki-down" : "ki-up") fs-1 rotate-180"></i>
+                            </div>
+                        </div>
+                        <div id="cat_@(category.Id)_collapsible" class="collapse @(category.Collapsed ? "" : "show")">
+                            <div class="card-body py-2">
+                                @if (category.Products.Any())
+                                {
+                                    <div class="dataTables_wrapper dt-bootstrap4 no-footer">
+                                        <div class="table-responsive">
+                                            <table class="table align-middle table-row-dashed fs-6 gy-2 dataTable no-footer">
+                                                <thead>
+                                                <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                                    <th class="min-w-200px sorting">Item</th>
+                                                    <th class="text-center min-w-100px">Preço</th>
+                                                    <th class="text-center min-w-100px">Estoque</th>
+                                                    <th class="text-center min-w-100px">Status</th>
+                                                    <th class="text-center min-w-100px">Destaque</th>
+                                                    <th class="text-end min-w-70px"></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody class="fw-semibold text-gray-600">
+                                                @foreach (ProductModel catalog in category.Products)
+                                                {
+                                                    <tr class="even">
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="symbol symbol-50px">
+                                                                    <span class="symbol-label" style="background-image:url('@(catalog.GetImageUrl())');"></span>
+                                                                </div>
+                                                                <div class="ms-5">
+                                                                    <span class="text-gray-800 text-hover-primary fs-5 fw-bold">
+                                                                        @(catalog.Name)
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center pe-0">
+                                                            <span class="fw-bold">@(CurrencyUtils.MoneyFormat(catalog.UnitPrice))</span>
+                                                        </td>
+                                                        <td class="text-center pe-0">
+                                                            <span class="fw-bold ms-3">@(catalog.Stockable ? catalog.AvailableStock : "-")</span>
+                                                        </td>
+                                                        <td class="text-center pe-0">
+                                                            <label class="form-check-label mb-1">
+                                                                @(catalog.Status == 1 ? "Ativo" : "Pausado")
+                                                            </label>
+                                                            <div class="form-check form-switch form-check-custom form-check-solid d-block">
+                                                                <input class="form-check-input h-20px w-40px" type="checkbox" checked="@(catalog.Status == 1)" @onchange='async (e) => await UpdateStatusAsync(catalog.Status = e.Value?.ToString() == "True" ? 1 : 3, catalog.Id, category.Id)'/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center pe-0">
+                                                            <label class="form-check-label mb-1">
+                                                                @(catalog.Highlights ? "Ativo" : "Desativado")
+                                                            </label>
+                                                            <div class="form-check form-switch form-check-custom form-check-solid d-block">
+                                                                <input class="form-check-input h-20px w-40px" type="checkbox" checked="@(catalog.Highlights)" @onchange='async (e) => await UpdateHighlightsAsync(e.Value?.ToString() == "True", catalog.Id, category.Id)'/>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="me-0">
+                                                                <button class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary" type="button" data-kt-menu-trigger="click" title="Detalhes">
+                                                                    <i class="ki-solid ki-dots-horizontal fs-2x me-1"></i>
+                                                                </button>
+                                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 fw-semibold w-200px py-3" data-kt-menu="true">
+                                                                    <div class="menu-item px-3">
+                                                                        <a href="/catalog/edit/@(catalog.Id)" class="menu-link flex-stack px-3 text-hover-success">
+                                                                            Editar
+                                                                            <span class="ms-2" data-bs-toggle="tooltip" title="Editar">
+                                                                                <i class="ki-outline ki-pencil fs-6"></i>
+                                                                            </span>
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="menu-item px-3">
+                                                                        <a class="menu-link flex-stack cursor-pointer px-3 text-hover-success" @onclick="async () => await DuplicateCatalogAsync(catalog.Id, category.Id)">
+                                                                            Duplicar
+                                                                            <span class="ms-2" data-bs-toggle="tooltip" title="Duplicar">
+                                                                                <i class="ki-outline ki-some-files fs-6"></i>
+                                                                            </span>
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="menu-item px-3">
+                                                                        <a class="menu-link flex-stack cursor-pointer px-3 text-hover-danger" @onclick="async () => await DeleteProductAsync(catalog.Id, category.Id)">
+                                                                            Excluir
+                                                                            <span class="ms-2" data-bs-toggle="tooltip" title="Excluir">
+                                                                                <i class="ki-outline ki-trash fs-6"></i>
+                                                                            </span>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<CreateCategoryModal OnSave="async (categoryId) => await LoadCatalogsAsync()"/>
+<EditCategoryModal Category="@(_editCategory)" OnSave="async (categoryId) => await LoadCatalogsAsync()"/>
+
+@code
+{
+    private List<CategoryModel>? _categories;
+    private CategoryModel? _editCategory;
+    
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCatalogsAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("Draggable2.Init");
+            await JsRuntime.InvokeVoidAsync("GLOBAL.SetDotnetReference", DotNetObjectReference.Create(this));
+        }
+        
+        await JsRuntime.InvokeVoidAsync("Delivery3Theme.Init");
+    }
+
+    async Task LoadCatalogsAsync()
+    {
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/category");
+        if (response.IsSuccessRequest)
+        {
+            _categories = JsonConvert.DeserializeObject<List<CategoryModel>>(response.Json ?? string.Empty);
+            StateHasChanged();
+        }
+    }
+
+    async Task OpenCategoryModalAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "modal_new_category");
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "modal_new_category");
+    }
+  
+    [JSInvokable("UpdateSortAsync")]
+    public async Task UpdateSortAsync()
+    {
+        if (_categories == null)
+            return;
+
+        var categoryIds = await JsRuntime.InvokeAsync<List<int>>("Draggable2.GetSort");
+        if (categoryIds.Count < 2)
+            return;
+
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+        _categories.ForEach(x => x.Sort = 999);
+        var sort = 1;
+        foreach (int categoryId in categoryIds)
+        {
+            _categories.First(x => x.Id == categoryId).Sort = sort;
+            sort++;
+        }
+
+        _ = await DataRequest.SendAsync(HttpMethod.Put, "/category/sort", new { categories = _categories.Select(x => new { x.Id, x.Sort }) });
+    }
+
+    async Task DeleteCategoryAsync(int categoryId)
+    {
+        CategoryModel? category = _categories?.FirstOrDefault(x => x.Id == categoryId);
+        if (category == null)
+            return;
+
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Atenção",
+            Text = $"Essa operação irá excluir permanentemente a categoria '{category.Name}', e todos os itens contidos nela. Deseja continuar?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Continuar",
+            ConfirmButtonColor = "#F1416C",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Delete, $"/category?Id={category.Id}");
+            if (response.IsSuccessRequest)
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Success", "Categoria excluída com sucesso.");
+                await LoadCatalogsAsync();
+            }
+            else
+                await JsRuntime.InvokeVoidAsync("Toastr.Warning", response.Error);
+        }
+    }
+
+    async Task OpenEditCategoryModalAsync(int categoryId)
+    {
+        CategoryModel? category = _categories?.FirstOrDefault(x => x.Id == categoryId);
+        if (category == null)
+            return;
+
+        _editCategory = category;
+        StateHasChanged();
+
+        await JsRuntime.InvokeVoidAsync("Modal.Show", "modal_edit_category");
+    }
+
+    async Task DuplicateCatalogAsync(int productId, int categoryId)
+    {
+        ProductModel? product = _categories?.Where(y => y.Id == categoryId)
+            .Select(x => x.Products.FirstOrDefault(p => p.Id == productId))
+            .FirstOrDefault();
+
+        if (product == null)
+            return;
+
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Duplicar produto",
+            Text = "Essa operação irá replicar este produto, com todas as suas características, complementos e disponibilidades. Deseja continuar?",
+            Icon = SweetAlertIcon.Info,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Continuar",
+            ConfirmButtonColor = "#3E97FF",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, $"/catalog/duplicate", new { product.Id });
+            if (response.IsSuccessRequest)
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Success", "Produto duplicado com sucesso.");
+                await LoadCatalogsAsync();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            }
+        }
+    }
+
+    async Task DeleteProductAsync(int productId, int categoryId)
+    {
+        ProductModel? product = _categories?.Where(y => y.Id == categoryId)
+            .Select(x => x.Products.FirstOrDefault(p => p.Id == productId))
+            .FirstOrDefault();
+
+        if (product == null)
+            return;
+
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Deletar produto",
+            Text = $"Essa operação irá deletar permanentemente este produto, com todas as suas características, complementos e disponibilidades. Deseja continuar?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Continuar",
+            ConfirmButtonColor = "#F1416C",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            ApiResponse response = await DataRequest.SendAsync(HttpMethod.Delete, $"/catalog", new { product.Id });
+            if (!response.IsSuccessRequest)
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("Toastr.Success", "Produto excluído com sucesso.");
+                await LoadCatalogsAsync();
+            }
+        }
+    }
+
+    async Task UpdateStatusAsync(int newStatus, int productId, int categoryId)
+    {
+        ProductModel? product = _categories?.Where(y => y.Id == categoryId)
+            .Select(x => x.Products.FirstOrDefault(p => p.Id == productId))
+            .FirstOrDefault();
+
+        if (product == null)
+            return;
+
+        product.Status = newStatus;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/catalog", product);
+        _loading = false;
+        if (response.IsSuccessRequest)
+        {
+            StateHasChanged();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+    }
+
+    async Task UpdateHighlightsAsync(bool highlights, int productId, int categoryId)
+    {
+        ProductModel? product = _categories?.Where(y => y.Id == categoryId)
+            .Select(x => x.Products.FirstOrDefault(p => p.Id == productId))
+            .FirstOrDefault();
+
+        if (product == null)
+            return;
+
+        product.Highlights = highlights;
+
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/catalog", product);
+        _loading = false;
+        if (response.IsSuccessRequest)
+        {
+            StateHasChanged();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+        }
+    }
+}

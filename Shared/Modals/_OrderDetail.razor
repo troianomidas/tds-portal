@@ -1,0 +1,218 @@
+﻿@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="@(Name)" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <a href="/web/printer/Coupon" target="_blank" class="btn btn-sm btn-icon btn-active-color-success me-5">
+                    <i class="ki-outline ki-printer fs-1"></i>
+                </a>
+                <div class="btn btn-sm btn-icon btn-active-color-success" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                @if (Order != null)
+                {
+                    <div class="text-center mb-5">
+                        <h1 class="mb-3">Pedido nº @(Order.Number)</h1>
+                        <div class="text-muted fw-semibold fs-5">Feito em @(Order.CreatedAt.ToString("dd/MM")) • @(Order.CreatedAt.ToShortTimeString()) • @(Order.IsOnlineMenu ? "Cardápio Digital" : "Portal Delivery3")</div>
+                    </div>
+                    <div class="row g-9 mb-5">
+                        <div class="col-4 text-start">
+                            <div class="d-flex justify-content-start p-0 bg-white">
+                                <div>
+                                    <span class="text-gray-800 fs-5 fw-semibold">Status</span>
+                                    <br>
+                                    <_OrderStatus Status="@(Order.Status)"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="d-flex justify-content-center p-0 bg-white">
+                                <div>
+                                    <span class="text-gray-800 fs-5 fw-semibold">@(Order.PaymentMethod?.IsOnline ?? false ? "Pgto. via Delivery3" : "Pgto. via loja")</span>
+                                    <div class="text-gray-600 fs-6">@(Order.PaymentMethod?.Name ?? "-")</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="d-flex justify-content-end p-0 bg-white">
+                                <div>
+                                    <span class="text-gray-800 fs-5 fw-semibold">Modo</span>
+                                    <div class="text-gray-600 fs-6">@(Order.GetDeliveryType())</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-flush py-0 flex-row-fluid">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-row-bordered mb-0 fs-6 gy-3">
+                                    <tbody class="fw-semibold text-gray-800">
+                                    <tr>
+                                        <td>@(Order.DeliveryTypeId == OrderDeliveryTypeConst.Counter ? "Mesa" : "Cliente")</td>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end">
+                                                @if (Order.DeliveryTypeId == OrderDeliveryTypeConst.Counter)
+                                                {
+                                                    <span class="text-gray-600">@(Order.TableReference ?? "-")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-gray-600">@(Order.Customer?.Name ?? "-")</span>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @if (Order.DeliveryTypeId != OrderDeliveryTypeConst.Counter && Order.Customer?.Phone > 0)
+                                    {
+                                        <tr>
+                                            <td>Celular</td>
+                                            <td class="text-gray-600 text-end">
+                                                @(CustomerUtils.GetPhone(Order.Customer?.Phone ?? 0))
+                                            </td>
+                                        </tr>
+                                    }
+
+                                    @if (Order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                    {
+                                        <tr>
+                                            <td>Entregador</td>
+                                            <td class="text-end">
+                                                <span class="text-gray-600">@(Order.Collaborator?.Name ?? "-")</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td>Previsão de entrega</td>
+                                        <td class="text-end">
+                                            <span class="text-gray-600">@(DateTimeUtils.PeriodLayout(Order.DeliveryEstimateBeginAt))</span>
+                                            <br>
+                                            <span class="text-gray-600">@($"{Order.DeliveryEstimateBeginAt.ToShortTimeString()} - {Order.DeliveryEstimateEndAt.ToShortTimeString()}")</span>
+                                        </td>
+                                    </tr>
+                                    @if (Order.DeliveryTypeId == OrderDeliveryTypeConst.Delivery)
+                                    {
+                                        <tr>
+                                            <td>Endereço de entrega</td>
+                                            <td class="text-end">
+                                                <span class="text-gray-600">@($"{Order.ShippingAddress?.Line1}, {Order.ShippingAddress?.Number}")</span>
+                                                <br>
+                                                <span class="text-gray-600">@($"{Order.ShippingAddress?.Neighborhood}, {Order.ShippingAddress?.CityState}")</span>
+                                                @if (!string.IsNullOrEmpty(Order.ShippingAddress?.Line2))
+                                                {
+                                                    <br>
+                                                    <span class="text-gray-600">@(Order.ShippingAddress.Line2)</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-9 mb-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed align-middle fs-6 gy-3 mb-0">
+                                <thead>
+                                <tr class="text-gray-800 fw-bold fs-6 text-uppercase">
+                                    <th>Item</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-600">
+                                @foreach (OrderItemModel item in Order.Items.Where(x => x.ExternalParentId == null))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex">
+                                                <div class="ms-0">
+                                                    <a class="fw-bold text-gray-800">@(item.Amount)x @(item.Item)</a>
+                                                    @foreach (OrderItemModel extra in Order.Items.Where(x => x.ExternalParentId == item.ExternalId))
+                                                    {
+                                                        <div class="fs-7">@(extra.Amount)x @(extra.Description): @(extra.Item)</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fs-6">
+                                            <span>@CurrencyUtils.MoneyFormat(Order.GetTotalItemValue(item.ExternalId))</span>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Order.Obs))
+                                {
+                                    <tr>
+                                        <td colspan="2">
+                                            <div class="ms-0 d-flex text-gray-800 fw-bold">
+                                                Obs.:
+                                                <div class="fs-7 text-gray-600" style="margin-left: 8px;text-align: justify;">
+                                                    @(Order.Obs)
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td class="text-end text-gray-800" style="padding-right: 5rem;">
+                                        Subtotal
+                                    </td>
+                                    <td class="text-end">
+                                        @(CurrencyUtils.MoneyFormat(Order.ItemsValue))
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end text-gray-800" style="padding-right: 5rem;">
+                                        Valor da entrega
+                                    </td>
+                                    <td class="text-end">
+                                        @(CurrencyUtils.MoneyFormat(Order.DeliveryValue))
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end text-gray-800" style="padding-right: 5rem;">
+                                        Descontos
+                                    </td>
+                                    <td class="text-end">
+                                        @if (Order.DiscountType == OrderDiscountTypeConst.Percentage)
+                                        {
+                                            <span>@(Order.DiscountValue)%</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@(CurrencyUtils.MoneyFormat(Order.DiscountValue))</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end text-gray-800 fw-bolder fs-3" style="padding-right: 5rem;">
+                                        Total
+                                    </td>
+                                    <td class="text-end text-gray-800 fw-bolder fs-3">
+                                        @(CurrencyUtils.MoneyFormat(Order.TotalValue))
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public OrderModel? Order { get; set; }
+
+    [Parameter]
+    public string? Name { get; set; } = "shared_order_detail_modal";
+
+    private bool _loading;
+}

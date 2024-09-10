@@ -1,0 +1,127 @@
+@page "/account/register"
+@using WebApp.Models.Subscriptions
+
+@inject NavigationManager NavigationManager
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+@inject IMemoryCache MemoryCache
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Cadastre Sua Loja no Quantso | Cardápio Online</PageTitle>
+
+<link href="login.css" rel="stylesheet" type="text/css"/>
+
+<div class="d-flex flex-column flex-lg-row flex-column-fluid">
+    <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1">
+        @if (_store != null)
+        {
+            <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+               <div class="w-lg-550px p-10">
+                                       @switch (_step)
+                                       {
+                                           case 1:
+                                               <Store Model="@_store" OnContinue="() => { _step = 2; }" OnBack='GoToLogin'></Store>
+                                               break;
+                                           case 2:
+                                               <Address Model="@_store" OnContinue="() => { _step = 3; }" OnBack="() => { _step = 1; }"></Address>
+                                               break;
+                                           case 3:
+                                               <BriefOwner Model="@_store" OnContinue="() => { _step = 4; }" OnBack="() => { _step = 2; }"></BriefOwner>
+                                               break;
+                                           case 4:
+                                               <Auth Model="@_store" OnConfirmed="async () => await RegisterAsync()" OnBack="() => { _step = 3; }"></Auth>
+                                               break;
+                                           @* case 6: *@
+                                           @*     <_VerificationCode ToEmail="@(_store.User?.Email)" ToName="@(_store.Name)" PublicIp="@(_store.User?.PublicIp)" OnConfirmed="async () => await RegisterAsync()" OnBack="() => { _step = 5; }"/> *@
+                                           @*     break; *@
+                                       }
+                                   </div>
+            </div>
+        }
+       
+        <div class="w-lg-500px m-auto">
+            <p class="text-center">
+                © Copyright 2024 - Quantso Servicos de Informacoes e Gestao - Todos os direitos reservados.
+                CNPJ 52.355.778/0001-17
+            </p>
+        </div>
+    </div>
+    <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2" style="background-image: url(auth-bg.png)">
+        <div class="d-flex flex-column flex-center py-7 py-lg-15 px-5 px-md-15 w-100">
+            <a href="/" class="mb-0 mb-lg-12">
+                <img alt="Logo" src="@(StorageConst.FrontDoor)/portal/assets/media/misc/auth-screens.png" class="h-400px">
+            </a>
+            <img class="d-none d-lg-block mx-auto w-275px w-md-50 w-xl-500px mb-10 mb-lg-20" src="/metronic8/demo4/assets/media/misc/auth-screens.png" alt="">
+            <h1 class="d-none d-lg-block text-white fs-2qx fw-bolder text-center mb-7">
+                Seu negócio pede visibilidade pra vender mais
+            </h1>
+            <div class="d-none d-lg-block text-white fs-base text-center">
+                Com o iFood, você conecta sua loja a milhões de novos clientes, expande sua área de entrega e vende muito mais.
+                <br>
+                Utilize nossas ferramentas de marketing para ter mais visibilidade e chegar a milhões de pessoas que amam pedir comida pelo app.
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private StoreModel? _store;
+    private int _step = 1;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _store = new StoreModel
+        {
+            Category = "restaurant",
+            Address = new AddressModel(),
+            User = new UserModel
+            {
+                CreatedAt = DateTime.Now
+            },
+            Subscription = new SubscriptionModel
+            {
+                BaseAmount = new decimal(119.99),
+                Amount = new decimal(119.99)
+            }
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            
+        }
+    }
+    
+    void GoToLogin()
+    {
+        NavigationManager.NavigateTo("/account/login", true);
+    }
+
+    async Task RegisterAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(1));
+    
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Post, "/Store/Create", _store);
+        _loading = false;
+        
+        if (!response.IsSuccessRequest)
+        {   
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        var store = JsonConvert.DeserializeObject<StoreModel>(response.Json ?? string.Empty);
+    
+        var loginValidator = Guid.NewGuid().ToString();
+        MemoryCache.Set(loginValidator, store?.User?.ExternalId, TimeSpan.FromHours(6));
+        NavigationManager.NavigateTo($"/web/auth/login?hash={loginValidator}", true);
+    }
+}

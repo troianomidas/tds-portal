@@ -1,0 +1,141 @@
+﻿@using WebApp.Models.Collaborators
+@inject DataRequest DataRequest
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="order_workflow_dispatch_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0 justify-content-end">
+                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                    <i class="ki-outline ki-cross fs-1"></i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 pt-0">
+                <div class="mb-5 text-center">
+                    <h1 class="mb-3">Despachar pedido nº @(OrderNumber)</h1>
+                    <div class="text-muted fw-semibold fs-5">Por favor, indique qual entregador será responsável por entregar os pedidos selecionados para envio. O status deles será modificado para 'Entregando'.</div>
+                </div>
+                <div class="p-4 pb-0" style="max-height: 400px">
+                    <div class="mb-3 d-flex">
+                        <div class="form-floating w-100">
+                            <select class="form-select" @bind="@(_deliverymanId)">
+                                @if (_collaborators != null)
+                                {
+                                    <option value=""></option>
+                                    foreach (CollaboratorModal item in _collaborators)
+                                    {
+                                        <option value="@(item.Id)">@(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                            <label class="form-label mb-3">Selecione o entregador</label>
+                        </div>
+                        <div class="col-1 pe-0">
+                            <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true">
+                                <i class="ki-outline ki-dots-square fs-1 text-gray-500 me-n1"></i>
+                            </button>
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px" data-kt-menu="true" style="">
+                                <div class="menu-item px-3">
+                                    <div class="menu-content fs-6 text-gray-900 fw-bold px-3 py-4">Ações rápidas</div>
+                                </div>
+                                <div class="separator mb-3 opacity-75"></div>
+                                <div class="menu-item px-3 mb-3" @onclick="async () => await LoadCollaboratorsAsync()">
+                                    <a class="menu-link px-3">
+                                        <i class="ki-outline ki-arrows-circle fs-4 me-3 mb-0"></i> Atualizar
+                                    </a>
+                                </div>
+                                <div class="menu-item px-3 mb-3">
+                                    <a href="/collaborators" target="_blank" class="menu-link px-3">
+                                        <i class="ki-outline ki-exit-right-corner fs-4 me-3 mb-0"></i> Cadastrar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if (_collaborators == null)
+                    {
+                        <p>Carregando entregadores...</p>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer text-center d-block p-3">
+                <button type="button" class="btn btn-light me-3">
+                    Fechar
+                </button>
+                @if (_loading)
+                {
+                    <_LoadingButton Class="btn-success"/>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-success" @onclick="async () => await SaveAsync()">Despachar pedido</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int OrderId { get; set; }
+
+    [Parameter]
+    public int OrderNumber { get; set; }
+
+    [Parameter]
+    public EventCallback<(CollaboratorModal? Collaborator, int OrderId)> OnSaved { get; set; }
+
+    private List<CollaboratorModal>? _collaborators;
+    private int? _deliverymanId;
+    private bool _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_collaborators == null)
+            await LoadCollaboratorsAsync();
+
+        await JsRuntime.InvokeVoidAsync("Delivery3Theme.Init");
+    }
+
+    async Task SaveAsync()
+    {
+        _loading = true;
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Put, "/Order/Status", new
+        {
+            Status = OrderStatusConst.Delivery,
+            OrderIds = new List<int>(1) {OrderId},
+            CollaboratorId = _deliverymanId
+        });
+        _loading = false;
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        await JsRuntime.InvokeVoidAsync("Toastr.Success", "Pedido despachado com com sucesso");
+        await OnSaved.InvokeAsync((_collaborators?.FirstOrDefault(x => x.Id == _deliverymanId), OrderId));
+        await CloseAsync();
+    }
+
+    async Task LoadCollaboratorsAsync()
+    {
+        _collaborators = null;
+        _deliverymanId = null;
+
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        ApiResponse response = await DataRequest.SendAsync(HttpMethod.Get, "/Collaborator");
+        if (!response.IsSuccessRequest)
+        {
+            await JsRuntime.InvokeVoidAsync("Toastr.Error", response.Error);
+            return;
+        }
+
+        _collaborators = JsonConvert.DeserializeObject<List<CollaboratorModal>>(response.Json ?? string.Empty);
+        StateHasChanged();
+    }
+
+    async Task CloseAsync() => await JsRuntime.InvokeVoidAsync("Modal.Close", "order_workflow_dispatch_modal");
+}

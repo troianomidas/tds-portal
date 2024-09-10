@@ -1,0 +1,7 @@
+﻿.form-switch.form-check-solid .form-check-input:not(:checked) {
+    background-color: var(--bs-success) !important;
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-success);
+}
